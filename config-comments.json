@@ -260,7 +260,7 @@
     "Default remote console port\nDefault: 3443": "Ra.Port",
     "Minimum level that's required to login,3 by default\nDefault: 3 (Administrator)": "Ra.MinLevel",
     "Kick client on wrong pass\n         0 - off\nDefault: 1 - on": "Ra.Secure",
-    "Not allow execute console level only commands remotly by RA\n         0 - off\nDefault: 1 - on": "Ra.Stricted",
+    "Not allow execute console level only commands remotly by RA\n         0 - off\nDefault: 1 - on": "Ra.Restricted",
     "Enable soap service\nDefault: 0 - off\n         1 - on": "SOAP.Enabled",
     "Bound SOAP service ip address, use 0.0.0.0 to access from everywhere\nDefault: 127.0.0.1": "SOAP.IP",
     "SOAP port\nDefault: 7878": "SOAP.Port",
