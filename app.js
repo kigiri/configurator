@@ -259,7 +259,7 @@ Promise.all([ '/config-comments.json', '/config.json', '/original.json' ]
           .then(() => {
             opts[k].value = v
             saving.set(Object.assign(saving(), { [i]: false }))
-            selectedOption() === i && description.set(opts[k])
+            selectedOption() == i && description.set(opts[k])
           })
       })).catch(console.error), 1000))
 
@@ -280,4 +280,4 @@ Promise.all([ '/config-comments.json', '/config.json', '/original.json' ]
       rightBlock,
     ]))
   })
-  .then(console.log)
+  .catch(console.error)

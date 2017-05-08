@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "babel-preset-latest": "^6.24.1",
-    "izi": "^2.1.0",
-    "mz": "^2.6.0"
+    "izi": "^3.0.1",
+    "mz": "^2.6.0",
+    "tupac": "^0.2.3"
   }
 }
