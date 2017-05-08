@@ -146,7 +146,7 @@
     "Seconds until creature corpse will decay without being looted or skinned (not used when creature does not have loot initially)\nDefault: 300, 900, 600, 1200, 3600": "Corpse.Decay.NORMAL,Corpse.Decay.RARE,Corpse.Decay.ELITE,Corpse.Decay.RAREELITE,Corpse.Decay.WORLDBOSS",
     "Controls how long the creature corpse stays after it had been looted, as a multiplier of its Corpse.Decay.* config.\nDefault: 0.0 (will use modifier /3 of the creatures spawntimesecs when 0.0)": "Rate.Corpse.Decay.Looted",
     "Creature Damage Rates.\nExamples: 2 - creatures will damage 2x, 1.7 - 1.7x.": "Rate.Creature.Normal.Damage,Rate.Creature.Elite.Elite.Damage,Rate.Creature.Elite.RAREELITE.Damage,Rate.Creature.Elite.WORLDBOSS.Damage,Rate.Creature.Elite.RARE.Damage",
-    "Creature Spell Damage Rates.\nExamples: 2 - creatures will damage with spells 2x, 1.7 - 1.7x.": "Rate.Creature.Normal.SpellDamage,Rate.Creature.Elite.Elite.SpellDamage,Rate.Creature.Elite.RAREELITE.SpellDamage,Rate.Creature.Elite.WORLDBOSS.SpellDamag,Rate.Creature.Elite.RARE.SpellDamage",
+    "Creature Spell Damage Rates.\nExamples: 2 - creatures will damage with spells 2x, 1.7 - 1.7x.": "Rate.Creature.Normal.SpellDamage,Rate.Creature.Elite.Elite.SpellDamage,Rate.Creature.Elite.RAREELITE.SpellDamage,Rate.Creature.Elite.WORLDBOSS.SpellDamage,Rate.Creature.Elite.RARE.SpellDamage",
     "Creature Health Ammount Modifier.\nExamples: 2 - creatures have 2x health, 1.7 - 1.7x.": "Rate.Creature.Normal.HP,Rate.Creature.Elite.Elite.HP,Rate.Creature.Elite.RAREELITE.HP,Rate.Creature.Elite.WORLDBOSS.HP,Rate.Creature.Elite.RARE.HP",
     "Distance from player to listen text that creature (or other world object) say\nDefault: 40": "ListenRange.Say",
     "Distance from player to listen textemote that creature (or other world object) say\nDefault: 40": "ListenRange.TextEmote",
@@ -161,10 +161,10 @@
     "Chat anti-flood protection, haste message count to activate protection\nDefault: 10\n         0 (disable anti-flood protection)": "ChatFlood.MessageCount",
     "Chat anti-flood protection, minimum message delay to count message\nDefault: 1 (in secs)": "ChatFlood.MessageDelay",
     "Chat anti-flood protection, mute time at activation flood protection (not saved)\nDefault: 10 (in secs)": "ChatFlood.MuteTime",
-    "Restrict use LookupForGroup channel only registered in LFG tool players\nDefault: 1 (allow join to channel only if active in LFG)\n         0 (allow join to channel in any time)": "Channel.RestrictedLfg"
+    "Restrict use LookupForGroup channel only registered in LFG tool players\nDefault: 1 (allow join to channel only if active in LFG)\n         0 (allow join to channel in any time)": "Channel.RestrictedLfg",
+    "Silently join GM characters (security level > 1) to channels\nDefault: 0 (join announcement in normal way)\n         1 (GM join without announcement)": "Channel.SilentlyGMJoin"
   },
   "GAME MASTER SETTINGS": {
-    "Silently join GM characters (security level > 1) to channels\nDefault: 0 (join announcement in normal way)\n         1 (GM join without announcement)": "Channel.SilentlyGMJoin",
     "GM mode at login\nDefault: 2 (last save state)\n         0 (disable)\n         1 (enable)": "GM.LoginState",
     "GM visibility at login\nDefault: 2 (last save state)\n         0 (invisible)\n         1 (visible)": "GM.Visible",
     "Is GM accepting tickets from player by default or not.\nDefault: 2 (last save state)\n         0 (disable)\n         1 (enable)": "GM.AcceptTickets",
@@ -174,20 +174,20 @@
     "Max GM level showed in who list (if visible).\n         0 (only players)\n         1 (only moderators)\n         2 (only gamemasters)\nDefault: 3 (anyone)": "GM.InWhoList.Level",
     "Include GM trade and trade slot enchanting operations in GM log if it enable\nDefault: 1 (include)\n         0 (not include)": "GM.LogTrade",
     "GM starting level (1-255)\nDefault: 1": "GM.StartLevel",
-    "Disallow a lower security member to interact with a higher one using commands\nDefault: 0 (disable)\n         1 (enable)": "GM.LowerSecurity"
-  },
-  "VISIBILITY AND RADIUSES": {
+    "Disallow a lower security member to interact with a higher one using commands\nDefault: 0 (disable)\n         1 (enable)": "GM.LowerSecurity",
     "A spell that will be cast when a gm uses \".gm visible off\" (Must be aura spell)\nDefault: 37800 (50% Transparency)\n         0 (Disabled)": "GM.InvisibleAura",
-    "Group visibility modes\nDefault: 0 (standard setting: only members from same group can 100% auto detect invisible player)\n         1 (raid members 100% auto detect invisible player from same raid)\n         2 (players from same team can 100% auto detect invisible player)": "Visibility.GroupMode",
+    "Group visibility modes\nDefault: 0 (standard setting: only members from same group can 100% auto detect invisible player)\n         1 (raid members 100% auto detect invisible player from same raid)\n         2 (players from same team can 100% auto detect invisible player)": "Visibility.GroupMode"
+  },
+  "VISIBILITY AND RADIUSES": 
     "Visibility distance for different ingame object in different maps.\nVisibility on continents on offy ~90 yards. In BG/Arenas ~180. For instances default ~120.\nMax limited by active player zone: ~ 333\nMin limit is max aggro radius (45) * Rate.Creature.Aggro": "Visibility.Distance.Continents,Visibility.Distance.Instances,Visibility.Distance.BGArenas",
     "Visible distance for player in flight\nMin limit is 0 (not show any objects)": "Visibility.Distance.InFlight",
     "Visibility grey distance for creatures/players (fast changing objects)\naddition to appropriate object type Visibility.Distance.* use in case visibility removing to\nobject (except corpse around distances) If D is distance and G is grey distance then object\nmake visible if distance to it <= D but make non visible if distance > D+G\nDefault: 1 (yard)": "Visibility.Distance.Grey.Unit",
     "Visibility grey distance for dynobjects/gameobjects/corpses/creature bodies\nDefault: 10 (yards)": "Visibility.Distance.Grey.Object",
-    "Object's visibility update called, when distance between current object's position and position,\nwhere visiblity was updated last time, reaches RelocationLoverLimit value\nDefault: 10 (yards)": "Visibility.RelocationLowerLimit"
+    "Object's visibility update called, when distance between current object's position and position,\nwhere visiblity was updated last time, reaches RelocationLoverLimit value\nDefault: 10 (yards)": "Visibility.RelocationLowerLimit",
+    "Delay time between creature AI reactions on nearby movements\nDefault: 1000 (milliseconds)": "Visibility.AIRelocationNotifyDelay"
   },
   "SERVER RATES": {
-    "Delay time between creature AI reactions on nearby movements\nDefault: 1000 (milliseconds)": "Visibility.AIRelocationNotifyDelay",
-    "Health and power regeneration and rage income from damage.\nDefault: 1": "Rate.Health,Rate.Mana,Rate.Rage.Income,Rate.Rage.Loss,Rate.Focus,Rate.Loyalty,Rate.Energy (Rogue)",
+    "Health and power regeneration and rage income from damage.\nDefault: 1": "Rate.Health,Rate.Mana,Rate.Rage.Income,Rate.Rage.Loss,Rate.Focus,Rate.Loyalty,Rate.Energy",
     "Skill Discovery Rates\nDefault: 1": "Rate.Skill.Discovery",
     "Drop rates (items by quality and money)\nDefault: 1": "Rate.Drop.Item.Poor,Rate.Drop.Item.Normal,Rate.Drop.Item.Uncommon,Rate.Drop.Item.Rare,Rate.Drop.Item.Epic,Rate.Drop.Item.Legendary,Rate.Drop.Item.Artifact,Rate.Drop.Item.Referenced,Rate.Drop.Item.Quest,Rate.Drop.Money",
     "XP rates\nDefault: 1": "Rate.Pet.XP.Kill,Rate.XP.Kill,Rate.XP.Quest,Rate.XP.Explore",
@@ -214,20 +214,19 @@
     "Starting Character start gain sickness at spirit resurrection (1 min)\nDefault: 11\n           -10 - character will have full time (10min) sickness at 1 level\n           maxplayerlevel+1 - character will not have sickness at any level": "Death.SicknessLevel",
     "Enabled/disabled increase corpse reclaim delay at often PvP/PvE deaths\nDefault: 1 (enabled)\n           0 (disabled)": "Death.CorpseReclaimDelay.PvP,Death.CorpseReclaimDelay.PvE",
     "Enabled/disabled creating bones instead corpse at resurrection (in normal zones/instacnes, or battleground/arenas)\nDefault: 1 (enabled)\n           0 (disabled)": "Death.Bones.World,Death.Bones.BattlegroundOrArena",
-    "": "Rate.Reputation.Gain,Rate.Energy"
+    "Modifies the speed of player's ghosts, removed upon reviving, not permanent/saved, in non-BG and BG maps\nDefault: 1.0 (normal speed)": "Death.Ghost.RunSpeed.World,Death.Ghost.RunSpeed.Battleground",
+    "": "Rate.Reputation.Gain"
   },
   "BATTLEGROUND CONFIG": {
-    "Modifies the speed of player's ghosts, removed upon reviving, not permanent/saved, in non-BG and BG maps\nDefault: 1.0 (normal speed)": "Death.Ghost.RunSpeed.World,Death.Ghost.RunSpeed.Battleground",
     "Cast Deserter spell at player who leave battleground in progress\nDefault: 1 (enable)\n         0 (disable)": "Battleground.CastDeserter",
     "Enable queue announcer posting to chat at join\nDefault: 0 (not send)\n         1 (send to joined player only)\n         2 (send to all players)": "Battleground.QueueAnnouncer.Join",
     "Enable queue announcer posting to chat at BG start\nDefault: 0 (disable)\n         1 (enable)": "Battleground.QueueAnnouncer.Start",
     "Enable Battleground scores storage in database.\nDefault: 0 - (Disabled)\n         1 - (Enabled)": "Battleground.ScoreStatistics",
     "Set Battleground invitation type\nDefault: 0 (normal - invite as much players to bg as possible, don't bother with ballance)\n         1 (Experimental - don't allow to invite much more players of one faction)": "Battleground.InvitationType",
-    "The time to end the bg if there are less than MinPlayersPerTeam on one side in milliseconds\nDefault: 300000 (5 minutes)\n         0 - disable (not recommended)": "Battleground.PrematureFinishTimer",
-    "": "BattleGround.PrematureFinishTimer"
+    "The time to end the bg if there are less than MinPlayersPerTeam on one side in milliseconds\nDefault: 300000 (5 minutes)\n         0 - disable (not recommended)": "BattleGround.PrematureFinishTimer"
+    "The time in which premade group of 1 faction waits in BG Queue for premade group of other faction\nDefault: 1800000 (30 minutes)\n         0 - disable premade group matches (group always added to bg team in normal way)": "BattleGround.PremadeGroupWaitForMatch"
   },
   "ARENA CONFIG": {
-    "The time in which premade group of 1 faction waits in BG Queue for premade group of other faction\nDefault: 1800000 (30 minutes)\n         0 - disable premade group matches (group always added to bg team in normal way)": "BattleGround.PremadeGroupWaitForMatch",
     "The maximum rating difference between two groups in rated matches\nDefault: 0 (disable, rating difference is discarded)": "Arena.MaxRatingDifference",
     "After the specified milliseconds has passed,\nrating information will be discarded when selecting teams for matches\nalso initiates an update by this timer\nDefault: 600000 (10 minutes, recommended)\n         0 (disable)": "Arena.RatingDiscardTimer",
     "Set if arena points should be distributed automatically, or by GM command\nDefault: 0 (disable) (recommended): use gm command or sql query to distribute the points\n         1 (enable)  arena points are distributed automatically": "Arena.AutoDistributePoints",
@@ -236,26 +235,25 @@
     "Enable arena queue announcer posting to chat at exit\nDefault: 0 (disable)\n         1 (enable)": "Arena.QueueAnnouncer.Exit",
     "Current area season id, used for selection some rated arena settings.\nDefault: 1": "Arena.ArenaSeason.ID",
     "Default Rating at team creation\nDefault: -1 (use season dependent default value)": "Arena.StartRating",
+    "Default Personal Rating at team creation\nDefault: -1 (use season dependent default value)": "Arena.StartPersonalRating",
     "": "Arena.ArenaSeasonPrevious.ID"
   },
   "OUTDOOR PVP CONFIG": {
-    "Default Personal Rating at team creation\nDefault: -1 (use season dependent default value)": "Arena.StartPersonalRating",
     "Enable Silithus Outdoor pvp": "OutdoorPvp.SIEnabled",
     "Enable Eastern Plaguelands Outdoor pvp": "OutdoorPvp.EPEnabled",
     "Enable Hellfire Peninsula Outdoor pvp": "OutdoorPvp.HPEnabled",
     "Enable Zangarmarsh Outdoor pvp": "OutdoorPvp.ZMEnabled",
-    "Enable Terokkar Forest  Outdoor pvp": "OutdoorPvp.TFEnabled"
+    "Enable Terokkar Forest  Outdoor pvp": "OutdoorPvp.TFEnabled",
+    "Enable Halaa (Nagrand) Outdoor pvp\nDefault: 1 (enable)\n         0 (disable)": "OutdoorPvp.NAEnabled"
   },
   "NETWORK CONFIG": {
-    "Enable Halaa (Nagrand) Outdoor pvp\nDefault: 1 (enable)\n         0 (disable)": "OutdoorPvp.NAEnabled",
     "Number of threads for network, recommend 1 thread per 1000 connections.\nDefault: 1": "Network.Threads",
     "The size of the output kernel buffer used ( SO_SNDBUF socket option, tcp manual ).\nDefault: -1 (Use system default setting)": "Network.OutKBuff",
     "Userspace buffer for output. This is amount of memory reserved per each connection.\nDefault: 65536": "Network.OutUBuff",
-    "TCP Nagle algorithm setting\nDefault: 0 (enable Nagle algorithm, less traffic, more latency)\n         1 (TCP_NO_DELAY, disable Nagle algorithm, more traffic but less latency)": "Network.TcpNoDelay:",
-    "": "SOAP.Enabled,Network.TcpNodelay"
+    "TCP Nagle algorithm setting\nDefault: 0 (enable Nagle algorithm, less traffic, more latency)\n         1 (TCP_NO_DELAY, disable Nagle algorithm, more traffic but less latency)": "Network.TcpNodelay",
+    "Kick player on bad packet format.\nDefault: 0 - do not kick\n         1 - kick": "Network.KickOnBadPacket"
   },
   "CONSOLE, REMOTE ACCESS AND SOAP": {
-    "Kick player on bad packet format.\nDefault: 0 - do not kick\n         1 - kick": "Network.KickOnBadPacket",
     "Enable console\nDefault: 1 - on\n         0 - off": "Console.Enable",
     "Enable remote console\nDefault: 0 - off\n         1 - on": "Ra.Enable",
     "Default remote console ip address, use 0.0.0.0 for every address": "Ra.IP",
@@ -263,7 +261,7 @@
     "Minimum level that's required to login,3 by default\nDefault: 3 (Administrator)": "Ra.MinLevel",
     "Kick client on wrong pass\n         0 - off\nDefault: 1 - on": "Ra.Secure",
     "Not allow execute console level only commands remotly by RA\n         0 - off\nDefault: 1 - on": "Ra.Stricted",
-    "Enable soap service\nDefault: 0 - off\n         1 - on": "SOAP.Enable",
+    "Enable soap service\nDefault: 0 - off\n         1 - on": "SOAP.Enabled",
     "Bound SOAP service ip address, use 0.0.0.0 to access from everywhere\nDefault: 127.0.0.1": "SOAP.IP",
     "SOAP port\nDefault: 7878": "SOAP.Port",
     "Character deletion behavior\nDefault: 0  - Completely remove the character from the database\n         1  - Unlinking, the character gets unlinked from the account,\n               the name gets freed up and appears as deleted ingame": "CharDelete.Method",
