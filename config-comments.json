@@ -6,10 +6,10 @@
     "Database connection settings for the world server.\nDefault:\n         ---MYSQL---\n             hostname;port;username;password;database\n             .;somenumber;username;password;database - use named pipes at Windows\n                 Named pipes: mySQL required adding \"enable-named-pipe\" to [mysqld] section my.ini\n             .;/path/to/unix_socket;username;password;database - use Unix sockets at Unix/Linux\n         ---PGSQL---\n             hostname;port;username;password;database\n             .;/path/to/unix_socket/DIRECTORY or . for default path;username;password;database - use Unix sockets at Unix/Linux": "LoginDatabaseInfo,WorldDatabaseInfo,CharacterDatabaseInfo",
     "Amount of connections to database which will be used for SELECT queries. Maximum 16 connections per database.\nPlease, note, for data consistency only one connection for each database is used for transactions and async SELECTs.\nSo formula to find out how many connections will be established: X = #_connections + 1\nDefault: 1 connection for SELECT statements": "LoginDatabaseConnections,WorldDatabaseConnections,CharacterDatabaseConnections",
     "Settings for maximum database-ping interval (minutes between pings)": "MaxPingTime",
-    "Port on which the server will listen": "WorldServerPort"
+    "Port on which the server will listen": "WorldServerPort",
+    "Bind World Server to IP/hostname\nThis option is useful for running multiple worldd/realmd instances\non different IP addresses using default ports.\nDO NOT CHANGE THIS UNLESS YOU _REALLY_ KNOW WHAT YOU'RE DOING": "BindIP"
   },
   "PERFORMANCE SETTINGS": {
-    "Bind World Server to IP/hostname\nThis option is useful for running multiple worldd/realmd instances\non different IP addresses using default ports.\nDO NOT CHANGE THIS UNLESS YOU _REALLY_ KNOW WHAT YOU'RE DOING": "BindIP",
     "Used processors mask for multi-processors system (Used only at Windows)\nDefault: 0 (selected by OS)\n         number (bitmask value of selected processors)": "UseProcessors",
     "Process priority setting (Used only at Windows)\nDefault: 1 (HIGH)\n         0 (Normal)": "ProcessPriority",
     "Compression level for update packages sent to client (1..9)\nDefault: 1 (speed)\n         9 (best compression)": "Compression",
@@ -36,10 +36,10 @@
     "Update realm uptime period in minutes (for save data in 'uptime' table). Must be > 0\nDefault: 10 (minutes)": "UpdateUptimeInterval",
     "Periodically check if the process got freezed, if this is the case force crash after the specified\namount of seconds. Must be > 0. Recommended > 10 secs if you use this.\nDefault: 0 (Disabled)": "MaxCoreStuckTime",
     "Permit/disable the use of the addon channel through the server\n(some client side addons can stop work correctly with disabled addon channel)\nDefault: 1 (permit addon channel)\n         0 (do not permit addon channel)": "AddonChannel",
-    "Perform character db cleanups on start up\nDefault: 1 (Enable)\n         0 (Disabled)": "CleanCharacterDB"
+    "Perform character db cleanups on start up\nDefault: 1 (Enable)\n         0 (Disabled)": "CleanCharacterDB",
+    "Set the max number of players returned in the /who list and interface (0 means unlimited)\nDefault:     49 - (stable)": "MaxWhoListReturns"
   },
   "SERVER LOGGING": {
-    "Set the max number of players returned in the /who list and interface (0 means unlimited)\nDefault:     49 - (stable)": "MaxWhoListReturns",
     "Enable logging of GM commands - all SQL code will be written to a log file\nAll commands are written to a file: YYYY-MM-DD_logSQL.sql\nIf a new day starts (00:00:00), a new file is created - the old file will not be deleted.\nDefault: 1 - Write SQL code to logfile\n         0 - Do not log": "LogSQL",
     "World daemon PID file\nDefault: \"\"             - do not create PID file\n         \"./worldd.pid\" - create PID file (recommended name)": "PidFile",
     "Server console level of logging\n0 = Minimum; 1 = Basic&Error; 2 = Detail; 3 = Full/Debug\nDefault: 3": "LogLevel",
@@ -58,10 +58,10 @@
     "GM Logfile with timestamp of server start in name\nDefault: 0 - no timestamp in name\n         1 - add timestamp in name in form Logname_YYYY-MM-DD_HH-MM-SS.Ext for Logname.Ext": "GmLogTimestamp",
     "GM Logfiles with GM account id (Note: logs not created if GmLogFile not set)\nDefault: 0 - add gm log data to single log file\n         1 - add gm log data to account specific log files with name\n              in form Logname_#ID_YYYY-MM-DD_HH-MM-SS.Ext\n              or form Logname_#ID.Ext": "GmLogPerAccount",
     "Log file of RA commands\nDefault: \"Ra.log\"\n         \"\" - Empty name for disable": "RaLogFile",
+    "Color for messages (format \"normal_color details_color debug_color error_color\")\nColors: 0 - BLACK, 1 - RED, 2 - GREEN,  3 - BROWN, 4 - BLUE, 5 - MAGENTA, 6 -  CYAN, 7 - GREY,\n         8 - YELLOW, 9 - LRED, 10 - LGREEN, 11 - LBLUE, 12 - LMAGENTA, 13 - LCYAN, 14 - WHITE\nDefault: \"\" - none colors\nExample: \"13 7 11 9\"": "LogColors",
     "": "WorldLogTimestamp,LogTimestamp"
   },
   "SERVER SETTINGS": {
-    "Color for messages (format \"normal_color details_color debug_color error_color\")\nColors: 0 - BLACK, 1 - RED, 2 - GREEN,  3 - BROWN, 4 - BLUE, 5 - MAGENTA, 6 -  CYAN, 7 - GREY,\n         8 - YELLOW, 9 - LRED, 10 - LGREEN, 11 - LBLUE, 12 - LMAGENTA, 13 - LCYAN, 14 - WHITE\nDefault: \"\" - none colors\nExample: \"13 7 11 9\"": "LogColors",
     "Server realm style\n0 = NORMAL; 1 = PVP; 4 = NORMAL; 6 = RP; 8 = RPPVP\nalso custom type: 16 FFA_PVP (free for all pvp mode like arena PvP in all zones except rest\nactivated places and sanctuaries)": "GameType",
     "Server realm zone (set allowed alphabet in character names/etc). See also Strict*Names options.\n1 Development    - any language (Default)\n2 United States  - extended-Latin\n3 Oceanic        - extended-Latin\n4 Latin America  - extended-Latin\n5 Tournament     - basic-Latin at create, any at login\n6 Korea          - East-Asian\n7 Tournament     - basic-Latin at create, any at login\n8 English        - extended-Latin\n9 German         - extended-Latin\n10 French        - extended-Latin\n11 Spanish       - extended-Latin\n12 Russian       - Cyrillic\n13 Tournament    - basic-Latin at create, any at login\n14 Taiwan        - East-Asian\n15 Tournament    - basic-Latin at create, any at login\n16 China         - East-Asian\n17 CN1           - basic-Latin at create, any at login\n18 CN2           - basic-Latin at create, any at login\n19 CN3           - basic-Latin at create, any at login\n20 CN4           - basic-Latin at create, any at login\n21 CN5           - basic-Latin at create, any at login\n22 CN6           - basic-Latin at create, any at login\n23 CN7           - basic-Latin at create, any at login\n24 CN8           - basic-Latin at create, any at login\n25 Tournament    - basic-Latin at create, any at login\n26 Test Server   - any language\n27 Tournament    - basic-Latin at create, any at login\n28 QA Server     - any language\n29 CN9           - basic-Latin at create, any at login": "RealmZone",
     "Allow server use content from expansion\n         2 - check expansion 2 maps existence, and if client support expansion 2 and account have\n              expansion 2 setting then allow visit expansion 2 maps, allow create new class character)\nDefault: 1 - check expansion 1 maps existence, and if client support expansion 1 and account have\n              expansion 1 setting then allow visit expansion 1 maps, allow create new races character)\n         0 - not check expansion maps existence, not allow visit its, not allow create new race or new class\n              characters, ignore account expansion setting)": "Expansion",
@@ -126,14 +126,13 @@
     "": "DisableWaterBreath,MinPlayerName"
   },
   "PLAYER INTERACTION": {
-    "Should player chat be parsed for GM commands.\nDefault: 1 (parse commands)\n         0 (ignore commands)": "PlayerCommands",
     "Allow accounts to create characters in both teams in any game type.\nDefault: 0 (Not allowed)\n         1 (Allowed)": "AllowTwoSide.Accounts",
     "Allow or not common :chat(say,yell);channel(chat)group(join)guild(join);merge all auction houses for players from\ndifferent teams, send mail to different team.\nDefault: 0 (Not allowed)\n         1 (Allowed)": "AllowTwoSide.Interaction.Chat,AllowTwoSide.Interaction.Channel,AllowTwoSide.Interaction.Group,AllowTwoSide.Interaction.Guild,AllowTwoSide.Interaction.Auction,AllowTwoSide.Interaction.Mail",
     "Allow show player from both team in who list.\nDefault: 0 (Not allowed)\n         1 (Allowed)": "AllowTwoSide.WhoList",
-    "Allow adding friends from other team in friend list.\nDefault: 0 (Not allowed)\n         1 (Allowed)": "AllowTwoSide.AddFriend"
+    "Allow adding friends from other team in friend list.\nDefault: 0 (Not allowed)\n         1 (Allowed)": "AllowTwoSide.AddFriend",
+    "Allow other players see character talents in inspect dialog (Characters in Gamemaster mode can\ninspect talents always)\nDefault: 1 (allow)\n         0 (not allow)": "TalentsInspecting"
   },
   "CREATURE AND GAMEOBJECT SETTINGS": {
-    "Allow other players see character talents in inspect dialog (Characters in Gamemaster mode can\ninspect talents always)\nDefault: 1 (allow)\n         0 (not allow)": "TalentsInspecting",
     "Radius for creature to evade after being pulled away from combat start point\nIf ThreatRadius is less than creature aggro radius then aggro radius will be used\nDefault: 100 yards": "ThreatRadius",
     "Aggro radius percent or off.\nDefault: 1   - 100%\n         1.5 - 150%\n         0   - off (0%)": "Rate.Creature.Aggro",
     "The delay between when a creature spawns and when it can be aggroed by nearby movement.\nDefault: 5000 (5s)": "CreatureRespawnAggroDelay",
@@ -151,20 +150,21 @@
     "Distance from player to listen text that creature (or other world object) say\nDefault: 40": "ListenRange.Say",
     "Distance from player to listen textemote that creature (or other world object) say\nDefault: 40": "ListenRange.TextEmote",
     "Distance from player to listen text that creature (or other world object) yell\nDefault: 300": "ListenRange.Yell",
+    "Amount guids reserved for .npc add/.gobject add directly after last used in DB static spawned creature/gameobject guid\nCommands .npc add/.gobject add can be used only for guids from this reserve and required server restart if all guids\nfrom reserve used before above commands can be used in like case. Less size increase amount guids for dynamic spawns\nin game from other side\nDefault: 100": "GuidReserveSize.Creature,GuidReserveSize.GameObject",
     "": "Rate.Creature.Elite.WORLDBOSS.SpellDamage"
   },
   "CHAT SETTINGS": {
-    "Amount guids reserved for .npc add/.gobject add directly after last used in DB static spawned creature/gameobject guid\nCommands .npc add/.gobject add can be used only for guids from this reserve and required server restart if all guids\nfrom reserve used before above commands can be used in like case. Less size increase amount guids for dynamic spawns\nin game from other side\nDefault: 100": "GuidReserveSize.Creature,GuidReserveSize.GameObject",
     "Chat protection from creating fake messages using a lot spaces (other invisible symbols),\nnot applied to addon language messages, but can prevent working old addons\nthat use normal languages for sending data to another clients.\nDefault: 0 (disable fake messages preventing)\n         1 (enable fake messages preventing)": "ChatFakeMessagePreventing",
     "Check chat messages for ingame links to spells, items, quests, achievements etc.\nDefault: 0 (disable link checking)\n         1 (check if only valid pipe commands are used. This prevents posting pictures for example)\n         2 (verifiy that pipe commands are used in a correct order)\n         3 (check if color, entry and name don't contradict each other. For correct work, please assure\n             that you have extracted locale DBCs of every language specific client playing on this server.)": "ChatStrictLinkChecking.Severity",
     "Defines, what should be done if a message is considered to contain invalid pipe commands.\nDefault: 0 (silently ignore message)\n         1 (kick players who sent invalid formed messages)": "ChatStrictLinkChecking.Kick",
     "Chat anti-flood protection, haste message count to activate protection\nDefault: 10\n         0 (disable anti-flood protection)": "ChatFlood.MessageCount",
     "Chat anti-flood protection, minimum message delay to count message\nDefault: 1 (in secs)": "ChatFlood.MessageDelay",
     "Chat anti-flood protection, mute time at activation flood protection (not saved)\nDefault: 10 (in secs)": "ChatFlood.MuteTime",
-    "Restrict use LookupForGroup channel only registered in LFG tool players\nDefault: 1 (allow join to channel only if active in LFG)\n         0 (allow join to channel in any time)": "Channel.RestrictedLfg",
-    "Silently join GM characters (security level > 1) to channels\nDefault: 0 (join announcement in normal way)\n         1 (GM join without announcement)": "Channel.SilentlyGMJoin"
+    "Restrict use LookupForGroup channel only registered in LFG tool players\nDefault: 1 (allow join to channel only if active in LFG)\n         0 (allow join to channel in any time)": "Channel.RestrictedLfg"
   },
   "GAME MASTER SETTINGS": {
+    "Silently join GM characters (security level > 1) to channels\nDefault: 0 (join announcement in normal way)\n         1 (GM join without announcement)": "Channel.SilentlyGMJoin",
+    "Should player chat be parsed for GM commands.\nDefault: 1 (parse commands)\n         0 (ignore commands)": "PlayerCommands",
     "GM mode at login\nDefault: 2 (last save state)\n         0 (disable)\n         1 (enable)": "GM.LoginState",
     "GM visibility at login\nDefault: 2 (last save state)\n         0 (invisible)\n         1 (visible)": "GM.Visible",
     "Is GM accepting tickets from player by default or not.\nDefault: 2 (last save state)\n         0 (disable)\n         1 (enable)": "GM.AcceptTickets",
@@ -175,10 +175,10 @@
     "Include GM trade and trade slot enchanting operations in GM log if it enable\nDefault: 1 (include)\n         0 (not include)": "GM.LogTrade",
     "GM starting level (1-255)\nDefault: 1": "GM.StartLevel",
     "Disallow a lower security member to interact with a higher one using commands\nDefault: 0 (disable)\n         1 (enable)": "GM.LowerSecurity",
-    "A spell that will be cast when a gm uses \".gm visible off\" (Must be aura spell)\nDefault: 37800 (50% Transparency)\n         0 (Disabled)": "GM.InvisibleAura",
-    "Group visibility modes\nDefault: 0 (standard setting: only members from same group can 100% auto detect invisible player)\n         1 (raid members 100% auto detect invisible player from same raid)\n         2 (players from same team can 100% auto detect invisible player)": "Visibility.GroupMode"
+    "A spell that will be cast when a gm uses \".gm visible off\" (Must be aura spell)\nDefault: 37800 (50% Transparency)\n         0 (Disabled)": "GM.InvisibleAura"
   },
-  "VISIBILITY AND RADIUSES": 
+  "VISIBILITY AND RADIUSES": {
+    "Group visibility modes\nDefault: 0 (standard setting: only members from same group can 100% auto detect invisible player)\n         1 (raid members 100% auto detect invisible player from same raid)\n         2 (players from same team can 100% auto detect invisible player)": "Visibility.GroupMode",
     "Visibility distance for different ingame object in different maps.\nVisibility on continents on offy ~90 yards. In BG/Arenas ~180. For instances default ~120.\nMax limited by active player zone: ~ 333\nMin limit is max aggro radius (45) * Rate.Creature.Aggro": "Visibility.Distance.Continents,Visibility.Distance.Instances,Visibility.Distance.BGArenas",
     "Visible distance for player in flight\nMin limit is 0 (not show any objects)": "Visibility.Distance.InFlight",
     "Visibility grey distance for creatures/players (fast changing objects)\naddition to appropriate object type Visibility.Distance.* use in case visibility removing to\nobject (except corpse around distances) If D is distance and G is grey distance then object\nmake visible if distance to it <= D but make non visible if distance > D+G\nDefault: 1 (yard)": "Visibility.Distance.Grey.Unit",
@@ -223,7 +223,7 @@
     "Enable queue announcer posting to chat at BG start\nDefault: 0 (disable)\n         1 (enable)": "Battleground.QueueAnnouncer.Start",
     "Enable Battleground scores storage in database.\nDefault: 0 - (Disabled)\n         1 - (Enabled)": "Battleground.ScoreStatistics",
     "Set Battleground invitation type\nDefault: 0 (normal - invite as much players to bg as possible, don't bother with ballance)\n         1 (Experimental - don't allow to invite much more players of one faction)": "Battleground.InvitationType",
-    "The time to end the bg if there are less than MinPlayersPerTeam on one side in milliseconds\nDefault: 300000 (5 minutes)\n         0 - disable (not recommended)": "BattleGround.PrematureFinishTimer"
+    "The time to end the bg if there are less than MinPlayersPerTeam on one side in milliseconds\nDefault: 300000 (5 minutes)\n         0 - disable (not recommended)": "BattleGround.PrematureFinishTimer",
     "The time in which premade group of 1 faction waits in BG Queue for premade group of other faction\nDefault: 1800000 (30 minutes)\n         0 - disable premade group matches (group always added to bg team in normal way)": "BattleGround.PremadeGroupWaitForMatch"
   },
   "ARENA CONFIG": {
