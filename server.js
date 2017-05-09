@@ -12,9 +12,8 @@ const dbClient = new MariaDBSqlClient({
   password: 'mangos',
 })
 
-const qOpts = { useArray: true }
 const query = q => new Promise((s, f) =>
-  dbClient.query(q, null, qOpts, (e, r) => e ? f(e) : s(r)))
+  dbClient.query(q, (e, r) => e ? f(e) : s(r)))
 
 const confPath = process.argv[2] || './etc'
 const configFile = join(confPath, `mangosd.conf`)
@@ -51,8 +50,14 @@ const addFile = path => isStr(path)
   ? readFile(`.${path}`).then(body => addBody({ path, body }))
   : Promise.resolve(path).then(addBody)
 
+const headers = {
+  'Content-type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Cache-Control, Pragma, Origin, Authorization, Content-Type, X-Requested-With',
+  'Access-Control-Allow-Methods': 'GET',
+}
 const end = (code, message, res) => {
-  res.writeHead(code, { 'Content-Type': 'application/json' })
+  res.writeHead(code, headers)
   res.end(JSON.stringify(message))
 }
 
@@ -83,6 +88,7 @@ const execSql = (req, res) => {
         .catch(console.error)
     })
     .catch(err => end(500, err.message, res))
+}
 
 const handlers = [
   saveConfig,
@@ -103,7 +109,7 @@ const server = http.createServer((req, res) => {
     try {
       return handler(req, res)
     } catch (err) {
-      return end(500, err.message,)
+      return end(500, err.message, res)
     }
   }
 
