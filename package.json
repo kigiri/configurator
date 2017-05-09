@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "scripts": {
+      "build": "./build.sh"
+    },
     "babel-preset-latest": "^6.24.1",
     "izi": "^3.0.1",
     "mariasql": "^0.2.6",

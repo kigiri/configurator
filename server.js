@@ -23,6 +23,7 @@ const getConf = (src, path) => readFile(src)
   .then(body => ({ body: JSON.stringify(config.parse(body.toString('utf8'))), path }))
 
 const filesPath = [
+  '/db.html',
   '/index.html',
   '/config-comments.json',
   getConf(join(confPath, `mangosd.conf.dist`), '/original.json'),
@@ -53,7 +54,14 @@ const addFile = path => isStr(path)
 const headers = {
   'Content-type': 'application/json',
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Cache-Control, Pragma, Origin, Authorization, Content-Type, X-Requested-With',
+  'Access-Control-Allow-Headers': [
+    'Cache-Control',
+    'Pragma',
+    'Origin',
+    'Authorization',
+    'Content-Type',
+    'X-Requested-With',
+  ].join(', '),
   'Access-Control-Allow-Methods': 'GET',
 }
 const end = (code, message, res) => {
@@ -79,16 +87,8 @@ const saveConfig = (req, res) => {
     .catch(console.error)
 }
 
-const execSql = (req, res) => {
-  const q = b64(req.url.slice(3))
-  query(q)
-    .then(result => {
-      end(200, result, res)
-      writeFile(`${req.ip}_${Date.now()}.sql`, 'utf8')
-        .catch(console.error)
-    })
-    .catch(err => end(500, err.message, res))
-}
+const execSql = (req, res) => query(b64(req.url.slice(3)))
+  .then(result => end(200, result, res), err => end(500, err.message, res))
 
 const handlers = [
   saveConfig,
