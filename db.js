@@ -75,7 +75,7 @@ const rowElem = h.style({
 })
 
 const logo = h.a({
-  href: '/#/',
+  href: '/db/#/',
   style: {
     padding: '15px 15px 0',
     borderRadius: '50%',
@@ -155,25 +155,25 @@ const loadRoute = route => {
   let i = -1
   if (!db) {
     return display(map.toArr((_, name) => dbLink({
-      href: `/#/${name}`,
+      href: `/db/#/${name}`,
       style: { color: color[colorKeys[++i%colorKeys.length]] },
     }, name), dbInfo))
   }
 
   h.appendChild(dbEl, tableLink({
-    href: `/#/${dbName}`,
+    href: `/db/#/${dbName}`,
     style: { color: orange },
   }, dbName))
 
   const table = db[tableName]
   if (!table) {
     return display(keywordWrapper(map.toArr((_, name) => tableLink({
-      href: `/#/${dbName}/${name}/`,
+      href: `/db/#/${dbName}/${name}/`,
       style: { color: color[colorKeys[++i%colorKeys.length]] },
     }, name), db)))
   }
 
-  const href = `/#/${dbName}/${tableName}`
+  const href = `/db/#/${dbName}/${tableName}`
   h.appendChild(tableEl, tableLink({
     href,
     style: { color: cyan },
