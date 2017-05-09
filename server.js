@@ -5,6 +5,16 @@ const { readFile, writeFile } = require('mz/fs')
 const { gzip } = require('mz/zlib')
 const config = require('./tools/mangos-config')
 const allowedIp = require('./allowedIp')
+const MariaDBSqlClient = require('mariasql')
+const dbClient = new MariaDBSqlClient({
+  host: '127.0.0.1',
+  user: 'mangos',
+  password: 'mangos',
+})
+
+const qOpts = { useArray: true }
+const query = q => new Promise((s, f) =>
+  dbClient.query(q, null, qOpts, (e, r) => e ? f(e) : s(r)))
 
 const confPath = process.argv[2] || './etc'
 const configFile = join(confPath, `mangosd.conf`)
@@ -59,13 +69,24 @@ const saveConfig = (req, res) => {
       console.error(err)
       end(500, `unable to write config file:${err.message}`, res)
     })
-    .then(() => zip(JSON.stringify(conf[key])))
+    .then(() => zip(JSON.stringify(conf)))
     .then(body => files['/config'].body = body)
     .catch(console.error)
 }
 
+const execSql = (req, res) => {
+  const q = b64(req.url.slice(3))
+  query(q)
+    .then(result => {
+      end(200, result, res)
+      writeFile(`${req.ip}_${Date.now()}.sql`, 'utf8')
+        .catch(console.error)
+    })
+    .catch(err => end(500, err.message, res))
+
 const handlers = [
   saveConfig,
+  execSql,
 ]
 
 const server = http.createServer((req, res) => {
@@ -76,8 +97,15 @@ const server = http.createServer((req, res) => {
 
   if (!allowedIp.has(ip)) return end(403, 'forbiden', res)
 
+  req.ip = ip
   const handler = handlers[req.url[1]]
-  if (handler) return handler(req, res)
+  if (handler) {
+    try {
+      return handler(req, res)
+    } catch (err) {
+      return end(500, err.message,)
+    }
+  }
 
   const file = files[req.url]
   if (!file) return end(404, 'not found', res)
