@@ -1,7 +1,8 @@
 const http = require('http')
 const { isStr } = require('izi/is')
 const { join } = require('path')
-const { readFile, writeFile } = require('mz/fs')
+const { parse: parseUrl } = require('url')
+const { readFile: fsread, writeFile } = require('mz/fs')
 const { gzip } = require('mz/zlib')
 const config = require('./tools/mangos-config')
 const allowedIp = require('./allowedIp')
@@ -14,6 +15,8 @@ const dbClient = new MariaDBSqlClient({
 
 const query = q => new Promise((s, f) =>
   dbClient.query(q, (e, r) => e ? f(e) : s(r)))
+
+const readFile = (path, opts) => fsread(join(__dirname, path), opts)
 
 const confPath = process.argv[2] || './etc'
 const configFile = join(confPath, `mangosd.conf`)
@@ -48,7 +51,7 @@ const addBody = ({ path, body }) => gzip(body, { level: 9 })
   })
 
 const addFile = path => isStr(path)
-  ? readFile(`.${path}`).then(body => addBody({ path, body }))
+  ? readFile(join(path)).then(body => addBody({ path, body }))
   : Promise.resolve(path).then(addBody)
 
 const headers = {
@@ -102,18 +105,19 @@ const server = http.createServer((req, res) => {
     || req.connection.socket.remoteAddress
 
   if (!allowedIp.has(ip)) return end(403, 'forbiden', res)
-
   req.ip = ip
   const handler = handlers[req.url[1]]
+  const url = parseUrl(req.url)
+  console.log(ip,'->', url.pathname)
   if (handler) {
     try {
-      return handler(req, res)
+      return handler(req, res, url)
     } catch (err) {
       return end(500, err.message, res)
     }
   }
 
-  const file = files[req.url]
+  const file = files[url.pathname]
   if (!file) return end(404, 'not found', res)
 
   res.writeHead(200, file.head)
@@ -123,6 +127,8 @@ const server = http.createServer((req, res) => {
 Promise.all(filesPath.map(addFile))
   .then(() => {
     files['/'] = files[''] = files['/index']
+    files['/db/'] = files['/db']
+
     server.listen(3254, () => console.log('listening at 3254'))
   })
   .catch(console.error)
