@@ -6,6 +6,7 @@ const { readFile: fsread, writeFile } = require('mz/fs')
 const { gzip } = require('mz/zlib')
 const config = require('./tools/mangos-config')
 const allowedIp = require('./allowedIp')
+const { spawn } = require('child_process')
 const MariaDBSqlClient = require('mariasql')
 const dbClient = new MariaDBSqlClient({
   host: '127.0.0.1',
@@ -18,8 +19,9 @@ const query = q => new Promise((s, f) =>
 
 const readFile = (path, opts) => fsread(join(__dirname, path), opts)
 
-const confPath = process.argv[2] || './etc'
-const configFile = join(confPath, `mangosd.conf`)
+const confPath = process.argv[2] || './'
+const serverPath = join(confPath, `/run/mangosd`)
+const configFile = join(confPath, `/etc/mangosd.conf`)
 const conf = Object.create(null)
 
 const getConf = (src, path) => readFile(src)
@@ -27,9 +29,10 @@ const getConf = (src, path) => readFile(src)
 
 const filesPath = [
   '/db.html',
+  '/controltower.html',
   '/index.html',
   '/config-comments.json',
-  getConf(join(confPath, `mangosd.conf.dist`), '/original.json'),
+  getConf(join(confPath, `/etc/mangosd.conf.dist`), '/original.json'),
   getConf(configFile, '/config.json')
     .then(obj => {
       Object.assign(conf, JSON.parse(obj.body))
@@ -93,9 +96,21 @@ const saveConfig = (req, res) => {
 const execSql = (req, res) => query(b64(req.url.slice(3)))
   .then(result => end(200, result, res), err => end(500, err.message, res))
 
+let serverSpawn
+(function restartServer() {
+  serverSpawn = spawn(serverPath)
+  serverSpawn.on('close', restartServer)
+})()
+
+const handleServer = (req, res) => {
+  req.url
+  kill(serverSpawn.pid)
+}
+
 const handlers = [
   saveConfig,
   execSql,
+  handleServer,
 ]
 
 const server = http.createServer((req, res) => {
