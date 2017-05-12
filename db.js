@@ -242,6 +242,9 @@ const removeItemFromVendorList = (entry, item) => query(`
 // SPECIAL_CASE
 const creatureContent = npc => {
   const sub = flex()
+
+  // find linked scripts : 
+  // query(`SELECT * FROM mangos.creature_ai_scripts WHERE creature_id="2530" LIMIT 100`).then(console.log)
   if (npc.VendorTemplateId) {
     findVendorItemList(npc.VendorTemplateId)
       .then(r => sub.appendChild(inputHeader.style({
@@ -530,7 +533,7 @@ const loadRoute = route => {
         ])))
 
       const specialCase = g(g(specialCases, dbName), tableName)
-      specialCase.blacklist || (blacklist = new Set())
+      specialCase.blacklist || (specialCase.blacklist = new Set())
 
       const rawFieldList = map.toArr((field, name) => {
         let value = first[name]
