@@ -1,5 +1,5 @@
 const h = require('izi/h')
-const { isNum, isFn } = require('izi/is')
+const { isNum, isFn, isStr } = require('izi/is')
 const each = require('izi/collection/each')
 const curry = require('izi/auto-curry')
 const store = require('izi/collection/store')
@@ -258,6 +258,30 @@ const removeItemFromVendorList = (entry, item) => query(`
   WHERE entry="${entry}" AND item="${item}"
 `)
 
+const itemThumbnail = item => imgEl({
+  src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
+  style: {
+    width: '18px',
+    height: '18px',
+    margin: '4px 7px 4px 4px',
+    boxShadow: '0 0 0 4px black',
+    outline: `${color.blizz.quality[item.Quality]} solid 1px`,
+    outlineOffset: '2px',
+  },
+})
+
+const itemLink = (item, href) => [
+  itemThumbnail(item),
+  h.a({
+    href: isStr(href) ? href : `#/mangos/item_template/${item.entry}`,
+    style: {
+      flexGrow: 1,
+      color: color.blizz.quality[item.Quality],
+      textDecoration: 'none',
+    },
+  }, item.name),
+]
+
 // SPECIAL_CASE
 const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
   .then(r => h.replaceContent(vendorList, r.map(item => flex.style({
@@ -268,25 +292,7 @@ const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
     flexGrow: 1,
     paddingLeft: '0.25em',
   },[
-    imgEl({
-      src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
-      style: {
-        width: '58px',
-        height: '58px',
-        boxShadow: '0 0 0 4px black',
-        outline: `${color.blizz.quality[item.Quality]} solid 1px`,
-        outlineOffset: '2px',
-      },
-    }),
-    h.a({
-      href: `#/mangos/npc_vendor_template/${vendor}/${item.item}`,
-      style: {
-        paddingLeft: '0.75em',
-        flexGrow: 1,
-        color: color.blizz.quality[item.Quality],
-        textDecoration: 'none',
-      },
-    }, item.name),
+    itemLink(item, `#/mangos/npc_vendor_template/${vendor}/${item.item}`),
     a({
       style: {
         padding: '0.75em',
@@ -328,20 +334,21 @@ const getLinkedQuest = curry((db, npcEntry) => query(`
   WHERE a.id="${npcEntry}"
 `))
 
-getLinkedQuest.creature = getLinkedQuest('creature_involvedrelation')
-
+getLinkedQuest.creature = getLinkedQuest('creature_questrelation')
+name
 const sideHeader = h.style({
   display: 'flex',
   flexGrow: 1,
   flexDirection: 'column',
-  alignContent: 'flex-end',
+  //alignContent: 'flex-end',
+  alignItems: 'center',
   justifyContent: 'center',
 })
 
 const creatureContent = npc => {
   const sub = flex.style({ flexFlow: 'column' })
-  const rightHeader = sideHeader.style({ alignContent: 'flex-start' })
-  const leftHeader = sideHeader()
+  const rightHeader = sideHeader.style({ alignItems: 'flex-end' })
+  const leftHeader = sideHeader.style({ alignItems: 'flex-start' })
   // find linked scripts : 
   // query(`SELECT * FROM mangos.creature_ai_scripts WHERE creature_id="2319" LIMIT 100`)
   //   .then(console.log)
@@ -453,13 +460,24 @@ const creatureContent = npc => {
   ]
 }
 
-const getLinkedItems = quest => query(`
-  SELECT name, Quality
+const getQuestGiverItem = quest => query(`
+  SELECT entry, name, Quality, icon
   FROM mangos.item_template
   WHERE startquest="${quest}"
 `)
 
-const getLinkedNpc = quest => query(`
+const getQuestGiverNpc = quest => query(`
+  SELECT
+    Entry as entry,
+    MaxLevel as lvl,
+    Name as name
+  FROM mangos.creature_questrelation as a
+  LEFT JOIN mangos.creature_template as b
+    ON a.id = b.Entry
+  WHERE a.quest="${quest}"
+`)
+
+const getQuestTakerNpc = quest => query(`
   SELECT
     Entry as entry,
     MaxLevel as lvl,
@@ -470,26 +488,65 @@ const getLinkedNpc = quest => query(`
   WHERE a.quest="${quest}"
 `)
 
+const getQuestGiverGob = quest => query(`
+  SELECT entry, name
+  FROM mangos.gameobject_questrelation as a
+  LEFT JOIN mangos.gameobject_template as b
+    ON a.id = b.entry
+  WHERE a.quest="${quest}"
+`)
+
+const getQuestTakerGob = quest => query(`
+  SELECT entry, name
+  FROM mangos.gameobject_involvedrelation as a
+  LEFT JOIN mangos.gameobject_template as b
+    ON a.id = b.entry
+  WHERE a.quest="${quest}"
+`)
+
+const npcLink = npc => a({ href: `#/mangos/creature_template/${npc.entry}` }, [
+  h.span.style({ color: getLevelColor(npc.lvl) }, npc.lvl),
+  ` ${npc.name} `,
+  comment('(npc)')
+])
+
+const gobLink = gob => a({ href: `#/mangos/gameobject_template/${gob.entry}` },
+  [ `${gob.name} `, comment('(object)') ])
+
+
 const specialCases = {
   mangos: {
     quest_template: {
       content: quest => {
-        const header = inputHeader.style({ width: '100%' })
+        const leftHeader = sideHeader.style({ alignItems: 'flex-start' })
+        const rightHeader = sideHeader.style({ alignItems: 'flex-end' })
+
         Promise.all([
-          getLinkedNpc(quest.entry),
-          getLinkedItems(quest.entry),
-        ]).then(([ npcs, items ]) => {
-          header.appendChild(h.div([
-            npcs.map(npc =>
-              a({ href: `#/mangos/creature_template/${npc.entry}` }, [
-                h.span.style({ color: getLevelColor(npc.lvl) }, npc.lvl),
-                ` ${npc.name}`,
-              ])),
-            items.map(_ => JSON.stringify(_)),
+          getQuestGiverNpc(quest.entry),
+          getQuestGiverItem(quest.entry),
+          getQuestGiverGob(quest.entry),
+        ]).then(([ npcs, items, gobs ]) => {
+          leftHeader.appendChild(h.div([
+            gobs.map(gobLink),
+            npcs.map(npcLink),
+            items.map(item => h.div(itemLink(item))),
           ]))
         })
 
-        return header
+        Promise.all([
+          getQuestTakerNpc(quest.entry),
+          getQuestTakerGob(quest.entry),
+        ]).then(([ npcs, gobs ]) => {
+          rightHeader.appendChild(h.div([
+            gobs.map(gobLink),
+            npcs.map(npcLink),
+          ]))
+        })
+
+        return inputHeader.style({
+          minHeight: 0,
+          width: '100%',
+        }, [ leftHeader, sideHeader.style({ color: cyan }, '->'), rightHeader ])
       },
       links: {
         ReqItemId: 'item_template',
@@ -861,7 +918,6 @@ query(`
   ORDER BY name
 `).then(each(r => g(g(dbInfo, r.db), r.tbl)[r.name] = r))
   .then(() => {
-    console.log('LOADED')
     loadRoute(router())
     router(loadRoute)
   })
