@@ -5,11 +5,7 @@ const curry = require('izi/auto-curry')
 const store = require('izi/collection/store')
 const map = require('izi/collection/map')
 const filter = require('izi/collection/filter')
-const debounce = require('izi/debounce')
-const bind = require('izi/data-bind')
 const wow = require('./dbc')
-const loop = require('izi/loop')
-const persistant = require('izi/persistant')
 const observ = require('izi/emiter/observ')
 const keyHandler = require('izi/key-handler')
 
@@ -17,7 +13,6 @@ const keyHandler = require('izi/key-handler')
 const images = require('./images')
 const wowheadCdn = '//wow.zamimg.com/modelviewer/thumbs'
 const router = require('izi/router')
-const event = require('izi/event')
 const selectedTable = observ.check('')
 const dbInfo = Object.create(null)
 const colorKeys = [
@@ -231,6 +226,55 @@ const dbEl = h.span()
 const tableEl = h.span()
 const primaryEl = h.span.style({ color: pink })
 
+const removeItemFromVendorList = (entry, item) => query(`
+  DELETE
+  FROM mangos.npc_vendor_template
+  WHERE entry="${entry}" AND item="${item}"
+`)
+
+const itemThumbnail = item => imgEl({
+  src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
+  style: {
+    width: '18px',
+    height: '18px',
+    margin: '4px 7px 4px 4px',
+    boxShadow: '0 0 0 4px black',
+    outline: `${color.blizz.quality[item.Quality]} solid 1px`,
+    outlineOffset: '2px',
+  },
+})
+
+const npcLink = npc => a({ href: `#/mangos/creature_template/${npc.entry}` }, [
+  h.span.style({ color: getLevelColor(npc.lvl) }, npc.lvl),
+  ` ${npc.name} `,
+  comment('(npc)')
+])
+
+const gobLink = gob => a({ href: `#/mangos/gameobject_template/${gob.entry}` },
+  [ `${gob.name} `, comment('(object)') ])
+
+const itemLink = (item, href) => [
+  itemThumbnail(item),
+  h.a({
+    href: isStr(href) ? href : `#/mangos/item_template/${item.entry}`,
+    style: {
+      flexGrow: 1,
+      color: color.blizz.quality[item.Quality],
+      textDecoration: 'none',
+    },
+  }, item.name),
+]
+
+// Entry, QuestLevel, Title
+const questLink = quest => a({
+  href: `#/mangos/quest_template/${quest.Entry}`,
+}, [
+  imgEl({ src: images.quest }),
+  h.span.style({ color: getLevelColor(quest.QuestLevel) }, quest.QuestLevel),
+  ` ${quest.Title}`,
+])
+
+
 const findVendorItemList = VendorTemplateId => query(`
   SELECT
     a.entry as entry,
@@ -251,37 +295,6 @@ const findVendorItemList = VendorTemplateId => query(`
 
 
 const addItemToVendorList = insert('mangos.npc_vendor_template')
-
-const removeItemFromVendorList = (entry, item) => query(`
-  DELETE
-  FROM mangos.npc_vendor_template
-  WHERE entry="${entry}" AND item="${item}"
-`)
-
-const itemThumbnail = item => imgEl({
-  src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
-  style: {
-    width: '18px',
-    height: '18px',
-    margin: '4px 7px 4px 4px',
-    boxShadow: '0 0 0 4px black',
-    outline: `${color.blizz.quality[item.Quality]} solid 1px`,
-    outlineOffset: '2px',
-  },
-})
-
-const itemLink = (item, href) => [
-  itemThumbnail(item),
-  h.a({
-    href: isStr(href) ? href : `#/mangos/item_template/${item.entry}`,
-    style: {
-      flexGrow: 1,
-      color: color.blizz.quality[item.Quality],
-      textDecoration: 'none',
-    },
-  }, item.name),
-]
-
 // SPECIAL_CASE
 const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
   .then(r => h.replaceContent(vendorList, r.map(item => flex.style({
@@ -326,8 +339,8 @@ const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
 const getLinkedQuest = curry((db, npcEntry) => query(`
   SELECT
     quest as entry,
-    QuestLevel as lvl,
-    Title as name
+    QuestLevel,
+    Title
   FROM mangos.${db} as a
   LEFT JOIN mangos.quest_template as b
     ON a.quest = b.entry
@@ -335,7 +348,7 @@ const getLinkedQuest = curry((db, npcEntry) => query(`
 `))
 
 getLinkedQuest.creature = getLinkedQuest('creature_questrelation')
-name
+
 const sideHeader = h.style({
   display: 'flex',
   flexGrow: 1,
@@ -355,22 +368,16 @@ const creatureContent = npc => {
 
   // Get quest list if any
   getLinkedQuest.creature(npc.Entry)
-    .then(r => h.appendChild(leftHeader, r.map(quest => a({
-      href: `#/mangos/quest_template/${quest.entry}`,
-    }, [
-      imgEl({ src: images.quest }),
-      h.span.style({ color: getLevelColor(quest.lvl) }, quest.lvl),
-      ` ${quest.name}`,
-    ]))))
+    .then(r => h.appendChild(leftHeader, r.map(questLink)))
 
   if (npc.VendorTemplateId != 0) {
     const onclick = () => {
       const entry = itemInput.value.trim()
-      const whereClose = /[0-9]+/.test(entry)
+      const whereClause = /[0-9]+/.test(entry)
         ? `entry="${entry}"`
         : `name LIKE "%${entry}%"`
 
-      query(`SELECT entry FROM mangos.item_template WHERE ${whereClose} LIMIT 1`)
+      query(`SELECT entry FROM mangos.item_template WHERE ${whereClause} LIMIT 1`)
         .then(([ item ]) => {
           if (!item) {
             itemInput.style.color = red
@@ -460,6 +467,84 @@ const creatureContent = npc => {
   ]
 }
 
+///// ITEM_TEMPLATE
+const findLinkedQuests = entry => query(`
+  SELECT Entry, QuestLevel, Title
+  FROM mangos.quest_template
+  WHERE SrcItemId="${entry}"
+    OR ReqItemId1="${entry}"
+    OR ReqItemId2="${entry}"
+    OR ReqItemId3="${entry}"
+    OR ReqItemId4="${entry}"
+    OR ReqSourceId1="${entry}"
+    OR ReqSourceId2="${entry}"
+    OR ReqSourceId3="${entry}"
+    OR RewItemId1="${entry}"
+    OR RewItemId2="${entry}"
+    OR RewItemId3="${entry}"
+    OR RewChoiceItemId1="${entry}"
+    OR RewChoiceItemId2="${entry}"
+    OR RewChoiceItemId3="${entry}"
+    OR RewChoiceItemId4="${entry}"
+    OR RewChoiceItemId5="${entry}"
+    OR RewChoiceItemId6="${entry}"
+`)
+
+
+const itemContent = item => {
+  const rightHeader = sideHeader.style({
+    alignItems: 'flex-end',
+    minWidth: '40%',
+  })
+
+  findLinkedQuests(item.entry)
+    .then(related => rightHeader.appendChild(h.div(related.map(questLink))))
+
+  return inputHeader.style({
+    width: '100%',
+    backgroundImage: `url('${wowheadCdn}/item/${item.displayid}.png')`,
+  }, [
+    h.div(imgEl({
+      style: {
+        border: '1px solid',
+        borderColor: color.blizz.quality[item.Quality],
+        boxShadow: '0 0 0 1px black',
+        outline: 'black solid 1px',
+        outlineOffset: '-2px',
+      },
+      src: `//wowimg.zamimg.com/images/wow/icons/large/${item.icon}.jpg`,
+    })),
+    h.div.style({ padding: '0.25em', flexGrow: 1 }, [
+      h.div.style({
+        color: color.blizz.quality[item.Quality],
+        display: 'inline-block',
+        fontWeight: 'bold',
+        borderRadius: '0.25em',
+        padding: '0.25em',
+        letterSpacing: '0.1em',
+        background: 'rgba(0,0,0,.5)',
+      }, item.name),
+      h.div.style({
+        padding: '0.25em',
+        color: color.comment,
+      }, item.description, console.log(wow)),
+      h.div([
+        h.span(wow.item_template.class[item.class].subclass[item.subclass]),
+        comment(' - '),
+        h.span.style({ color:getLevelColor(item.RequiredLevel) },
+          `${item.RequiredLevel}(+${item.ItemLevel-item.RequiredLevel})`),
+        comment(' - '),
+        map.toArr((amount, type) =>
+          h.span.style({ color: color.blizz[type] },
+            `${amount}${type.slice(0, 1)} `),
+          filter(Boolean, getCost(item.SellPrice))),
+      ]),
+    ]),
+    rightHeader,
+  ])
+}
+
+///// QUEST_TEMPLATE
 const getQuestGiverItem = quest => query(`
   SELECT entry, name, Quality, icon
   FROM mangos.item_template
@@ -504,16 +589,6 @@ const getQuestTakerGob = quest => query(`
   WHERE a.quest="${quest}"
 `)
 
-const npcLink = npc => a({ href: `#/mangos/creature_template/${npc.entry}` }, [
-  h.span.style({ color: getLevelColor(npc.lvl) }, npc.lvl),
-  ` ${npc.name} `,
-  comment('(npc)')
-])
-
-const gobLink = gob => a({ href: `#/mangos/gameobject_template/${gob.entry}` },
-  [ `${gob.name} `, comment('(object)') ])
-
-
 const specialCases = {
   mangos: {
     quest_template: {
@@ -549,6 +624,7 @@ const specialCases = {
         }, [ leftHeader, sideHeader.style({ color: cyan }, '->'), rightHeader ])
       },
       links: {
+        SrcItemId: 'item_template',
         ReqItemId: 'item_template',
         ReqSourceId: 'item_template',
         RewChoiceItemId: 'item_template',
@@ -561,6 +637,7 @@ const specialCases = {
         RewSpell: 'spell_template',
         SrcSpell: 'spell_template',
         PrevQuestId: 'quest_template',
+        NextQuestInChain: 'quest_template',
       }
     },
     creature_template: {
@@ -588,56 +665,14 @@ const specialCases = {
     },
     item_template: {
       links: {
+        spellid_: 'spell_template',
         PageText: 'page_text',
         startquest: 'quest_template',
         RandomProperty: 'item_enchantment_template',
         RandomSuffix: 'item_enchantment_template',
         DisenchantID: 'disenchant_loot_template',
       },
-      content: item => inputHeader.style({
-        width: '100%',
-        backgroundImage: `url('${wowheadCdn}/item/${item.displayid}.png')`,
-      }, [
-        h.div(imgEl({
-          style: {
-            border: '1px solid',
-            borderColor: color.blizz.quality[item.Quality],
-            boxShadow: '0 0 0 1px black',
-            outline: 'black solid 1px',
-            outlineOffset: '-2px',
-          },
-          src: `//wowimg.zamimg.com/images/wow/icons/large/${item.icon}.jpg`,
-        })),
-        h.div.style({
-          padding: '0.25em',
-          flexGrow: 1,
-        }, [
-          h.div.style({
-            color: color.blizz.quality[item.Quality],
-            display: 'inline-block',
-            fontWeight: 'bold',
-            borderRadius: '0.25em',
-            padding: '0.25em',
-            letterSpacing: '0.1em',
-            background: 'rgba(0,0,0,.5)',
-          }, item.name),
-          h.div.style({
-            padding: '0.25em',
-            color: color.comment,
-          }, item.description, console.log(wow)),
-          h.div([
-            h.span(wow.item_template.class[item.class].subclass[item.subclass]),
-            comment(' - '),
-            h.span.style({ color:getLevelColor(item.RequiredLevel) },
-              `${item.RequiredLevel}(+${item.ItemLevel-item.RequiredLevel})`),
-            comment(' - '),
-            map.toArr((amount, type) =>
-              h.span.style({ color: color.blizz[type] },
-                `${amount}${type.slice(0, 1)} `),
-              filter(Boolean, getCost(item.SellPrice))),
-          ]),
-        ]),
-      ]),
+      content: itemContent,
       blacklist: new Set([
         'displayid',
         'icon',
