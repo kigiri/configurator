@@ -334,7 +334,7 @@ const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
 
 const getLinkedQuest = curry((db, npcEntry) => query(`
   SELECT
-    quest as entry,
+    quest as Entry,
     QuestLevel,
     Title
   FROM mangos.${db} as a
