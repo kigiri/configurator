@@ -1,5 +1,5 @@
 const h = require('izi/h')
-const { isNum } = require('izi/is')
+const { isNum, isFn } = require('izi/is')
 const each = require('izi/collection/each')
 const curry = require('izi/auto-curry')
 const store = require('izi/collection/store')
@@ -18,6 +18,7 @@ const logoSrc = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAABxCAMAAAAAn
 const wowheadCdn = '//wow.zamimg.com/modelviewer/thumbs'
 const router = require('izi/router')
 const event = require('izi/event')
+const selectedTable = observ.check('')
 const dbInfo = Object.create(null)
 const colorKeys = [
   'cyan',
@@ -188,13 +189,27 @@ const inputEl = h.style('input', {
   color: color.yellow,
   padding: '0.75em',
   margin: '1em',
-  borderRadius: '0.2em',
+  borderRadius: '0.25em',
   border: 'none',
   width: '100%',
 })
 
+const inuptBaseEl = h.style('input', {
+  background: color.background,
+  color: color.yellow,
+  borderRadius: '0.25em',
+  border: 0,
+  padding: '0 0.5em',
+  height: '1.75em',
+})
+
+const textAreaEl = h.style('textarea', {
+  resize: 'vertical',
+  border: 'none',
+})
+
 const inputHeader = h.style({
-  width: '100%',
+  flexGrow: 1,
   display: 'flex',
   backgroundColor: color.background,
   borderRadius: '0.25em',
@@ -240,76 +255,148 @@ const removeItemFromVendorList = (entry, item) => query(`
 `)
 
 // SPECIAL_CASE
+const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
+  .then(r => h.replaceContent(vendorList, r.map(item => flex.style({
+    alignItems: 'center',
+    marginBottom: '0.25em',
+    height: '2em',
+    width: '33%',
+    flexGrow: 1,
+    paddingLeft: '0.25em',
+  },[
+    h.img({
+      src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
+      style: {
+        verticalAlign: 'middle',
+        boxShadow: '0 0 0 4px black',
+        outline: `${color.blizz.quality[item.Quality]} solid 1px`,
+        outlineOffset: '2px',
+      },
+    }),
+    h.a({
+      href: `#/mangos/npc_vendor_template/${vendor}/${item.item}`,
+      style: {
+        paddingLeft: '0.75em',
+        flexGrow: 1,
+        color: color.blizz.quality[item.Quality],
+        textDecoration: 'none',
+      },
+    }, item.name),
+    seamlessLink({
+      style: {
+        padding: '0.75em',
+        color: red,
+      },
+      href: location.hash,
+      onclick: function handleDelete({ target: el }) {
+        el.onclick = undefined
+        el.style.color = green
+        h.replaceContent(el, '↺')
+        el.parentElement.style.opacity = 0.3
+        removeItemFromVendorList(item.entry, item.item)
+          .then(() => el.onclick = () => {
+            el.onclick = undefined
+            el.style.color = color.comment
+            h.replaceContent(el, '.')
+            addItemToVendorList(filter((_, name) =>
+              dbInfo.mangos.npc_vendor_template[name], item))
+                .then(r => {
+                  console.log(r)
+                  el.onclick = handleDelete
+                  el.style.color = red
+                  h.replaceContent(el, 'X')
+                  el.parentElement.style.opacity = 1
+                })
+          })
+      },
+    }, 'X')
+  ]))))
+
+const getLinkedQuest = npcEntry => query(`
+  SELECT
+    quest,
+    QuestLevel,
+    Title
+  FROM mangos.creature_involvedrelation as a
+  LEFT JOIN mangos.quest_template as b
+    ON a.quest = b.entry
+  WHERE id="${npcEntry}"
+`)
+
 const creatureContent = npc => {
-  const sub = flex()
+  const sub = flex.style({ flexFlow: 'column' })
 
   // find linked scripts : 
-  // query(`SELECT * FROM mangos.creature_ai_scripts WHERE creature_id="2530" LIMIT 100`).then(console.log)
-  if (npc.VendorTemplateId) {
-    findVendorItemList(npc.VendorTemplateId)
-      .then(r => sub.appendChild(inputHeader.style({
-        flexFlow: 'row',
-        flexWrap: 'wrap',
-        alignContent: 'center',
-      }, r.map(item => flex.style({
-        alignItems: 'center',
-        marginBottom: '0.25em',
-        height: '2em',
-        width: '33%',
-        flexGrow: 1,
-        paddingLeft: '0.25em',
-      },[
-        h.img({
-          src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
-          style: {
-            verticalAlign: 'middle',
-            boxShadow: '0 0 0 4px black',
-            outline: `${color.blizz.quality[item.Quality]} solid 1px`,
-            outlineOffset: '2px',
-          },
-        }),
-        h.a({
-          href: `#/mangos/npc_vendor_template/${npc.VendorTemplateId}/${item.item}`,
-          style: {
-            paddingLeft: '0.75em',
-            flexGrow: 1,
-            color: color.blizz.quality[item.Quality],
-            textDecoration: 'none',
-          },
-        }, item.name),
+  // query(`SELECT * FROM mangos.creature_ai_scripts WHERE creature_id="2530" LIMIT 100`)
+  //   .then(console.log)
+
+  // Get quest list if any
+  getLinkedQuest(npc.entry)
+    .then(r => {
+      console.log(r)
+    })
+
+  if (npc.VendorTemplateId != 0) {
+    const onclick = () => {
+      const entry = itemInput.value.trim()
+      const whereClose = /[0-9]+/.test(entry)
+        ? `entry="${entry}"`
+        : `name LIKE "%${entry}%"`
+
+      query(`SELECT entry FROM mangos.item_template WHERE ${whereClose} LIMIT 1`)
+        .then(([ item ]) => {
+          if (!item) {
+            itemInput.style.color = red
+            return itemInput.focus()
+          }
+          addItemToVendorList({ entry: npc.VendorTemplateId, item: item.entry })
+            .then(({ info }) => {
+              if (info.affectedRows == 1) {
+                fetchItemList(npc.VendorTemplateId, vendorList)
+              }
+              itemInput.value = ''
+              itemInput.focus()
+            })
+        })
+        
+    }
+    const vendorList = flex.style({ flexFlow: 'row', flexWrap: 'wrap' })
+    const onkeydown = keyHandler({ enter: onclick })
+    const itemInput = inuptBaseEl({
+      style: { width: '20em' },
+      onkeypress: () => itemInput.style.color = yellow,
+      onkeydown,
+    })
+    h.appendChild(sub, inputHeader.style({
+      flexFlow: 'column',
+      alignContent: 'center',
+    }, [
+      flex.style({ color: cyan, justifyContent: 'center'},
+        '- Vendor Item List -'),
+      vendorList,
+      h.label.style({
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'center',
+        background: color.selection,
+        borderRadius: '0.25em',
+      }, [
+        h.span.style({ paddingRight: '0.5em' }, 'item ID or Name'),
+        itemInput,
         seamlessLink({
+          style: { padding: '0.75em', color: green },
           href: location.hash,
-          onclick: function handleDelete({ target: el }) {
-            el.onclick = undefined
-            el.style.color = green
-            h.replaceContent(el, '↺')
-            el.parentElement.style.opacity = 0.3
-            removeItemFromVendorList(item.entry, item.item)
-              .then(() => el.onclick = function resetItem() {
-                el.onclick = undefined
-                el.style.color = color.comment
-                h.replaceContent(el, '.')
-                addItemToVendorList(filter((_, name) =>
-                  dbInfo.mangos.npc_vendor_template[name], item))
-                    .then(r => {
-                      console.log(r)
-                      el.onclick = handleDelete
-                      el.style.color = red
-                      el.onclick = resetItem
-                      h.replaceContent(el, 'X')
-                      el.parentElement.style.opacity = 1
-                    })
-              })
-          },
-          style: {
-            padding: '0.75em',
-            color: red,
-          },
-        }, 'X')
-      ])))))
+          onclick,
+        }, 'add'),
+      ])
+    ]))
+
+    fetchItemList(npc.VendorTemplateId, vendorList)
   }
+
   return [
     inputHeader.style({
+      width: '100%',
       backgroundImage: `url('${wowheadCdn}/npc/${npc.ModelId1}.png')`,
       justifyContent: 'center',
       alignItems: 'center',
@@ -323,7 +410,7 @@ const creatureContent = npc => {
         npc.Name,
         npc.Rank != 0 && ` (${wow.creature_template.Rank[npc.Rank]})`,
       ]),
-      (npc.SubName !== 'null')
+      (npc.SubName && npc.SubName !== 'null')
         && h.div.style({ color: cyan }, `<${npc.SubName}>`),
       h.div([
         //lootId,
@@ -342,7 +429,36 @@ const creatureContent = npc => {
 
 const specialCases = {
   mangos: {
+    quest_template: {
+      links: {
+        ReqItemId: 'item_template',
+        ReqSourceId: 'item_template',
+        RewChoiceItemId: 'item_template',
+        RewMailTemplateId: 'quest_mail_loot_template',
+        ReqCreatureOrGOId: val => `#/mangos/${Number(val) > 0
+          ? 'creature_template'
+          : 'gameobject_template'}/${Math.abs(Number(val))}`,
+        StartScript: 'quest_start_scripts',
+        CompleteScript: 'quest_end_scripts',
+        RewSpell: 'spell_template',
+        SrcSpell: 'spell_template',
+        PrevQuestId: 'quest_template',
+      }
+    },
     creature_template: {
+      links: {
+        //ModelId: 'Creature_Model_Info',
+        LootId: 'creature_loot_template',
+        PickpocketLootId: 'pickpocketing_loot_template',
+        SkinningLootId: 'skinning_loot_template',
+        KillCredit: 'creature_template',
+        QuestItem: 'item_template',
+        TrainerSpell: 'spell_template',
+        TrainerTemplateId: 'npc_trainer_template',
+        VendorTemplateId: 'npc_vendor_template',
+        EquipmentTemplateId: 'creature_equip_template',
+        GossipMenuId: 'gossip_menu_id',
+      },
       blacklist: new Set([
         'RacialLeader',
         'InhabitType',
@@ -352,7 +468,15 @@ const specialCases = {
       content: creatureContent,
     },
     item_template: {
+      links: {
+        PageText: 'page_text',
+        startquest: 'quest_template',
+        RandomProperty: 'item_enchantment_template',
+        RandomSuffix: 'item_enchantment_template',
+        DisenchantID: 'disenchant_loot_template',
+      },
       content: item => inputHeader.style({
+        width: '100%',
         backgroundImage: `url('${wowheadCdn}/item/${item.displayid}.png')`,
       }, [
         h.div(h.img({
@@ -480,13 +604,19 @@ const displayTableSelection = (db, dbName) => {
     tableLink({ href: `#/${dbName}/${name}/` }, name), db))))
 }
 
-//const by
+const getLinkedHref = (links, field, value) => {
+  if (value === field.def) return
+  const link = links[field.name] || links[field.name.slice(0, -1)]
+  return link && (isFn(link) ? link(value) : `#/mangos/${link}/${value}`)
+}
+
 const empty = Object.freeze(Object.create(null))
 const isPrimary = field => field.ref === 'PRIMARY'
 const display = h.replaceContent(content)
+selectedTable(() => logo.scrollIntoView())
 const loadRoute = route => {
   const [ dbName, tableName, ...selectParams ] = route.split('/')
-
+  selectedTable.set(tableName)
   const db = dbInfo[dbName]
   if (!db) return displayDbSelection()
 
@@ -533,6 +663,7 @@ const loadRoute = route => {
         ])))
 
       const specialCase = g(g(specialCases, dbName), tableName)
+      const links = g(specialCase, 'links')
       specialCase.blacklist || (specialCase.blacklist = new Set())
 
       const rawFieldList = map.toArr((field, name) => {
@@ -542,57 +673,68 @@ const loadRoute = route => {
         const original = originalValues === empty ? empty : originalValues[name]
         const hasDefaultValue = field.def === value
         const valueKey = hasDefaultValue ? 'placeholder' : 'value'
+        const isText = field.type === "text"
 
-        const refresh = el => {
+        const refresh = () => {
           if (original === value) {
             resetButton.style.display = 'none'
-            return el.style.color = yellow
+            return input.style.color = yellow
           }
           resetButton.style.display = ''
-          el.style.color = green
+          input.style.color = green
         }
 
-        const input = h.input({
-          placeholder: field.def,
-          [valueKey]: value,
-          onfocus: ({ target: el }) => el.style.color = orange,
-          onblur: ({ target: el }) => {
-            if (!el.value) {
-              hasDefaultValue || (el.value = field.def)
-              return refresh(el)
-            }
-            if (el.value === value) {
-              hasDefaultValue && (el.value = '')
-              return refresh(el)
-            }
-            query(`UPDATE ${TABLE} SET ${name}="${el.value}" ${WHERE}`)
-              .then(res => {
-                if (Number(res.info.affectedRows)) {
-                  value = field.value = el.value
-                  refresh(el)
-                } else {
-                  throw Error('no changes done')
-                }
-              })
-              .catch(err => {
-                console.error(err.message)
-                el.style.color = red
-              })
-          },
+        const href = getLinkedHref(links, field, value)
+        const link = seamlessLink({
           style: {
-            border: 0,
-            padding: '0 0.5em',
-            height: '1.75em',
+            paddingRight: '0.5em',
+            color: href ? purple : 'inherit',
+          },
+          href,
+        }, name)
+
+        const input = (isText ? textAreaEl : inuptBaseEl)({
+          style: {
+            height: (value && isText)
+              ? `${1 + (value.length / 40)}em`
+              : undefined,
             width: '100%',
             background: 'transparent',
             color: original === value ? yellow : green,
           },
+          placeholder: field.def,
+          [valueKey]: value,
+          onfocus: () => input.style.color = orange,
+          onblur: () => {
+            if (!input.value) {
+              hasDefaultValue || (input.value = field.def)
+              return refresh()
+            }
+            if (input.value === value) {
+              hasDefaultValue && (input.value = '')
+              return refresh()
+            }
+            query(`UPDATE ${TABLE} SET ${name}="${input.value}" ${WHERE}`)
+              .then(res => {
+                if (Number(res.info.affectedRows)) {
+                  value = field.value = input.value
+                  href && (link.href = getLinkedHref(links, field, value))
+                  refresh()
+                } else {
+                  throw Error('no changes done')
+                }
+              })
+              .catch(err => (input.style.color = red,
+                console.error(err.message)))
+          },
         })
 
         const resetButton = h.span({
-          onclick: ({ target: el }) => {
-            el.style.display = 'none'
-            input.value = original
+          onclick: () => {
+            value = input.value = original
+            href && (link.href = getLinkedHref(links, field, value))
+            query(`UPDATE ${TABLE} SET ${name}="${original}" ${WHERE}`)
+              .then(refresh)
           },
           style: {
             fontSize: '1.35em',
@@ -606,12 +748,14 @@ const loadRoute = route => {
         return {
           field,
           el: labelEl.style({
+            flexDirection: isText ? 'column' : 'row',
+            padding: isText ? '0.5em' : undefined,
             paddingLeft: '0.5em',
             background: color.background,
             margin: '0.5em 0.25em',
             borderRadius: '0.25em',
           }, [
-            h.div.style({ paddingRight: '0.5em' }, name),
+            link,
             input,
             resetButton,
           ]),
