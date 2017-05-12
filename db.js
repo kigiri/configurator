@@ -244,19 +244,18 @@ const itemThumbnail = item => imgEl({
   },
 })
 
-const npcLink = npc => a({ href: `#/mangos/creature_template/${npc.entry}` }, [
+const npcLink = npc => a({ href: `#/mangos/creature_template/update/${npc.entry}` }, [
   h.span.style({ color: getLevelColor(npc.lvl) }, npc.lvl),
   ` ${npc.name} `,
-  comment('(npc)')
 ])
 
-const gobLink = gob => a({ href: `#/mangos/gameobject_template/${gob.entry}` },
+const gobLink = gob => a({ href: `#/mangos/gameobject_template/update/${gob.entry}` },
   [ `${gob.name} `, comment('(object)') ])
 
 const itemLink = (item, href) => [
   itemThumbnail(item),
   h.a({
-    href: isStr(href) ? href : `#/mangos/item_template/${item.entry}`,
+    href: isStr(href) ? href : `#/mangos/item_template/update/${item.entry}`,
     style: {
       flexGrow: 1,
       color: color.blizz.quality[item.Quality],
@@ -266,14 +265,11 @@ const itemLink = (item, href) => [
 ]
 
 // Entry, QuestLevel, Title
-const questLink = quest => a({
-  href: `#/mangos/quest_template/${quest.Entry}`,
-}, [
+const questLink = quest => a({ href: `#/mangos/quest_template/update/${quest.Entry}` }, [
   imgEl({ src: images.quest }),
   h.span.style({ color: getLevelColor(quest.QuestLevel) }, quest.QuestLevel),
   ` ${quest.Title}`,
 ])
-
 
 const findVendorItemList = VendorTemplateId => query(`
   SELECT
@@ -305,7 +301,7 @@ const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
     flexGrow: 1,
     paddingLeft: '0.25em',
   },[
-    itemLink(item, `#/mangos/npc_vendor_template/${vendor}/${item.item}`),
+    itemLink(item, `#/mangos/npc_vendor_template/${vendor}/update/${item.item}`),
     a({
       style: {
         padding: '0.75em',
@@ -589,12 +585,20 @@ const getQuestTakerGob = quest => query(`
   WHERE a.quest="${quest}"
 `)
 
+const npcAndRelationLinks = (npc, quest) => h.div([
+  npcLink(npc),
+  a({
+    style: { color: purple },
+    href: `#/mangos/creature_questrelation/update/${npc.entry}/${quest.entry}`,
+  }, '(relation)')
+])
 const specialCases = {
   mangos: {
     quest_template: {
       content: quest => {
         const leftHeader = sideHeader.style({ alignItems: 'flex-start' })
         const rightHeader = sideHeader.style({ alignItems: 'flex-end' })
+        const npcRlink = npc => npcAndRelationLinks(npc, quest)
 
         Promise.all([
           getQuestGiverNpc(quest.entry),
@@ -603,7 +607,7 @@ const specialCases = {
         ]).then(([ npcs, items, gobs ]) => {
           leftHeader.appendChild(h.div([
             gobs.map(gobLink),
-            npcs.map(npcLink),
+            npcs.map(npcRlink),
             items.map(item => h.div(itemLink(item))),
           ]))
         })
@@ -614,7 +618,7 @@ const specialCases = {
         ]).then(([ npcs, gobs ]) => {
           rightHeader.appendChild(h.div([
             gobs.map(gobLink),
-            npcs.map(npcLink),
+            npcs.map(npcRlink),
           ]))
         })
 
@@ -631,7 +635,7 @@ const specialCases = {
         RewMailTemplateId: 'quest_mail_loot_template',
         ReqCreatureOrGOId: val => `#/mangos/${Number(val) > 0
           ? 'creature_template'
-          : 'gameobject_template'}/${Math.abs(Number(val))}`,
+          : 'gameobject_template'}/update/${Math.abs(Number(val))}`,
         StartScript: 'quest_start_scripts',
         CompleteScript: 'quest_end_scripts',
         RewSpell: 'spell_template',
@@ -639,6 +643,18 @@ const specialCases = {
         PrevQuestId: 'quest_template',
         NextQuestInChain: 'quest_template',
       }
+    },
+    creature_questrelation: {
+      links: { quest: 'quest_template', id: 'creature_template' },
+    },
+    creature_involvedrelation: {
+      links: { quest: 'quest_template', id: 'creature_template' },
+    },
+    gameobject_questrelation: {
+      links: { quest: 'quest_template', id: 'gameobject_template' },
+    },
+    gameobject_involvedrelation: {
+      links: { quest: 'quest_template', id: 'gameobject_template' },
     },
     creature_template: {
       links: {
@@ -662,6 +678,12 @@ const specialCases = {
         'HeroicEntry',
       ]),
       content: creatureContent,
+    },
+    spell_template: {
+      links: {
+        Reagent: 'item_template',
+        EffectItemType: 'item_template',
+      }
     },
     item_template: {
       links: {
@@ -760,7 +782,7 @@ const displayTableSelection = (db, dbName) => {
 const getLinkedHref = (links, field, value) => {
   if (value === field.def) return
   const link = links[field.name] || links[field.name.slice(0, -1)]
-  return link && (isFn(link) ? link(value) : `#/mangos/${link}/${value}`)
+  return link && (isFn(link) ? link(value) : `#/mangos/${link}/update/${value}`)
 }
 
 const empty = Object.freeze(Object.create(null))
@@ -768,8 +790,7 @@ const isPrimary = field => field.ref === 'PRIMARY'
 const display = h.replaceContent(content)
 selectedTable(() => logo.scrollIntoView())
 const loadRoute = route => {
-  console.log(`-> ${route}`)
-  const [ dbName, tableName, ...selectParams ] = route.split('/')
+  let [ dbName, tableName, action, ...selectParams ] = route.split('/')
   selectedTable.set(tableName)
   const db = dbInfo[dbName]
   if (!db) return displayDbSelection()
@@ -788,6 +809,12 @@ const loadRoute = route => {
   }, tableName))
 
   const primaryFields = filter.toArr(isPrimary, table)
+
+  if (/[0-9]+/.test(action)) {
+    selectParams.unshift(action)
+    action = 'update'
+  }
+
   if (!selectParams.join('')) {
     return displayPrimarySearch(primaryFields, selectParams)
   }
@@ -823,7 +850,7 @@ const loadRoute = route => {
       const rawFieldList = map.toArr((field, name) => {
         let value = first[name]
         if (/^unk([0-9]+)?$/.test(name)) return
-        if (primaryFields.includes(field)) return
+        if (field.name.toLowerCase() === 'entry') return
         const original = originalValues === empty ? empty : originalValues[name]
         const hasDefaultValue = field.def === value
         const valueKey = hasDefaultValue ? 'placeholder' : 'value'
