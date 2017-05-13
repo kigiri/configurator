@@ -585,11 +585,11 @@ const getQuestTakerGob = quest => query(`
   WHERE a.quest="${quest}"
 `)
 
-const npcAndRelationLinks = (npc, quest) => h.div([
+const npcAndRelationLinks = (npc, quest, type) => h.div([
   npcLink(npc),
   a({
     style: { color: purple },
-    href: `#/mangos/creature_questrelation/update/${npc.entry}/${quest.entry}`,
+    href: `#/mangos/creature_${type}relation/update/${npc.entry}/${quest.entry}`,
   }, '(relation)')
 ])
 const specialCases = {
@@ -598,7 +598,6 @@ const specialCases = {
       content: quest => {
         const leftHeader = sideHeader.style({ alignItems: 'flex-start' })
         const rightHeader = sideHeader.style({ alignItems: 'flex-end' })
-        const npcRlink = npc => npcAndRelationLinks(npc, quest)
 
         Promise.all([
           getQuestGiverNpc(quest.entry),
@@ -607,7 +606,7 @@ const specialCases = {
         ]).then(([ npcs, items, gobs ]) => {
           leftHeader.appendChild(h.div([
             gobs.map(gobLink),
-            npcs.map(npcRlink),
+            npcs.map(npc => npcAndRelationLinks(npc, quest, 'quest')),
             items.map(item => h.div(itemLink(item))),
           ]))
         })
@@ -618,7 +617,7 @@ const specialCases = {
         ]).then(([ npcs, gobs ]) => {
           rightHeader.appendChild(h.div([
             gobs.map(gobLink),
-            npcs.map(npcRlink),
+            npcs.map(npc => npcAndRelationLinks(npc, quest, 'involved')),
           ]))
         })
 
