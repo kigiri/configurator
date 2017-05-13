@@ -84,7 +84,12 @@ const { cyan, green, orange, pink, red, purple, yellow } = color
 // LIB
 const wesh = _ => (console.log(_), _)
 const g = (s, k) => s[k] || (s[k] = Object.create(null))
-const b64 = s => encodeURIComponent(btoa(s.trim()))
+const _tag = tag => Array.from(document.getElementsByTagName(tag))
+const b64 = s => btoa(s.trim())
+  .replace(/\+/g, '-')
+  .replace(/\//g, '_')
+  .replace(/=+$/, '')
+
 const toJSON = r => r.ok
   ? r.json()
   : r.json().then(msg => Promise.reject(Error(msg)))
@@ -626,8 +631,13 @@ const specialCases = {
           width: '100%',
         }, [ leftHeader, sideHeader.style({ color: cyan }, '->'), rightHeader ])
       },
+      required: new Set([
+        'Title',
+        'QuestLevel',
+      ]),
       links: {
         SrcItemId: 'item_template',
+        RewItemId: 'item_template',
         ReqItemId: 'item_template',
         ReqSourceId: 'item_template',
         RewChoiceItemId: 'item_template',
@@ -639,6 +649,7 @@ const specialCases = {
         CompleteScript: 'quest_end_scripts',
         RewSpell: 'spell_template',
         SrcSpell: 'spell_template',
+        RewSpellCast: 'spell_template',
         PrevQuestId: 'quest_template',
         NextQuestInChain: 'quest_template',
       }
@@ -740,20 +751,20 @@ const findLinkEl = dbLink({
   onclick: execFind,
 }, 'find one')
 
-const displayPrimarySearch = (primaryFields, selectParams) => {
+const displayPrimarySearch = (primaryFields, params) => {
   h.empty(primaryEl)
   display([
     primaryFields.map(({ name, def }, i) => labelEl([
       h.div.style({
         width: '25em',
         textAlign: 'right',
-        color: selectParams[i] ? red : color.foreground,
+        color: params[i] ? red : color.foreground,
       }, name),
       inputEl({
         id: name,
         placeholder: def,
         onkeydown: execFindOnEnter,
-        value: selectParams[i],
+        value: params[i],
       }),
     ])),
     findLinkEl,
@@ -778,71 +789,114 @@ const displayTableSelection = (db, dbName) => {
     tableLink({ href: `#/${dbName}/${name}/` }, name), db))))
 }
 
-const getLinkedHref = (links, field, value) => {
-  if (value === field.def) return
-  const link = links[field.name] || links[field.name.slice(0, -1)]
-  return link && (isFn(link) ? link(value) : `#/mangos/${link}/update/${value}`)
+const buildFieldInput = (field, name) => {
+  if (/^unk([0-9]+)?$/.test(name) || (name.toLowerCase() === 'entry')) return
+  const isText = field.type === "text"
+  const specialCase = g(g(specialCases, field.db), field.tbl)
+  const required = specialCase.required || (specialCase.required = new Set)
+
+  const input = (isText ? textAreaEl : inuptBaseEl)({
+    style: {
+      width: '100%',
+      minHeight: 'calc(100% - 1em)',
+      background: 'transparent',
+      color: orange,
+    },
+    dataset: { name },
+    placeholder: field.def,
+  })
+
+  const label = h.span({
+    style: {
+      paddingRight: '0.5em',
+      userSelect: 'none',
+      lineHeight: '1.75em',
+      cursor: 'pointer',
+    },
+    onclick: () => required.has(name) || (input.dataset.selected
+      ? (input.dataset.selected = '', label.style.color = color.foreground)
+      : (input.dataset.selected = 1, label.style.color = green)),
+  }, name)
+
+  if (required.has(name)) {
+    input.dataset.selected = 1
+    label.style.color = green
+  }
+
+  return {
+    field,
+    el: labelEl.style({
+      flexDirection: isText ? 'column' : 'row',
+      padding: isText ? '0.5em' : undefined,
+      paddingLeft: '0.5em',
+      background: color.background,
+      margin: '2px 0.25em',
+      borderRadius: '0.25em',
+      width: 'calc(50% - 0.5em)',
+    }, [ label, input ]),
+  }
 }
 
-const empty = Object.freeze(Object.create(null))
-const isPrimary = field => field.ref === 'PRIMARY'
-const display = h.replaceContent(content)
-selectedTable(() => logo.scrollIntoView())
-const loadRoute = route => {
-  let [ dbName, tableName, action, ...selectParams ] = route.split('/')
-  selectedTable.set(tableName)
-  const db = dbInfo[dbName]
-  if (!db) return displayDbSelection()
+const wrappedFlex = h.style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between',
+})
 
-  h.replaceContent(dbEl, tableLink({
-    href: `#/`,
-    style: { color: orange },
-  }, dbName))
+const byFieldPos = (a, b) => a.field.pos - b.field.pos
+const displayFields = (fields, headerContent) => display(wrappedFlex([
+  headerContent,
+  wrappedFlex(fields.sort(byFieldPos).map(c => c.el)),
+]))
 
-  const table = db[tableName]
-  if (!table) return displayTableSelection(db, dbName)
+const execFindWhere = () => {
+  const whereParams = {}
+  const fields = new Set()
+  _tag('input').concat(_tag('textarea'))
+    .forEach(el => {
+      el.dataset.selected && fields.add(el.dataset.name)
+      el.value && (whereParams[el.dataset.name] = el.value)
+    })
+  console.log(whereParams, fields)
+}
 
-  h.replaceContent(tableEl, tableLink({
-    href: `#/${dbName}/`,
-    style: { color: cyan },
-  }, tableName))
+const displayWhereSelector = ({ db, tableName, table, params, primaryFields }) => {
+  h.replaceContent(primaryEl, 'where')
+  displayFields(map.toArr(buildFieldInput, table).filter(Boolean), flex.style({
+    width: '100%',
+  }, dbLink({
+    style: { color: purple, marginBottom: '1em', },
+    href: location.hash,
+    onclick: execFindWhere,
+  }, `find in ${tableName}`)))
+}
 
-  const primaryFields = filter.toArr(isPrimary, table)
+const displayUpdateField = ({ db, tableName, table, params, primaryFields }) => {
+  if (!params.join('')) return displayPrimarySearch(primaryFields, params)
 
-  if (/[0-9]+/.test(action)) {
-    selectParams.unshift(action)
-    action = 'update'
-  }
-
-  if (!selectParams.join('')) {
-    return displayPrimarySearch(primaryFields, selectParams)
-  }
-
-  const TABLE = `${dbName}.${tableName}`
-  const WHERE = 'WHERE '+ selectParams
+  const TABLE = `${db}.${tableName}`
+  const WHERE = 'WHERE '+ params
     .map((val, i) => primaryFields[i] && `${primaryFields[i].name}="${val}"`)
     .filter(Boolean)
     .join(' AND ')
 
   Promise.all([
     query(`SELECT * FROM ${TABLE} ${WHERE}`),
-    query(`SELECT * FROM ${dbName}_clean.${tableName} ${WHERE}`)
+    query(`SELECT * FROM ${db}_clean.${tableName} ${WHERE}`)
       .catch(() => []),
   ]).then(([results, originalResults]) => {
       const originalValues = originalResults[0] || empty
-      const first = results[0]
+      const [ first ] = results
 
-      if (!first) {
-        return displayPrimarySearch(primaryFields, selectParams)
-      }
+      if (!first) return displayPrimarySearch(primaryFields, params)
 
       h.replaceContent(primaryEl, primaryFields.map(field =>
-        a({ href: `#/${dbName}/${tableName}/` }, [
+        a({ href: `#/${field.db}/${field.tbl}/` }, [
           comment(`${field.name}:`),
           `${first[field.name]}`,
         ])))
 
-      const specialCase = g(g(specialCases, dbName), tableName)
+      const specialCase = g(g(specialCases, field.db), field.tbl)
       const links = g(specialCase, 'links')
       specialCase.blacklist || (specialCase.blacklist = new Set())
 
@@ -878,6 +932,7 @@ const loadRoute = route => {
             height: (value && isText)
               ? `${1 + (value.length / 40)}em`
               : undefined,
+            minHeight: 'calc(100% - 1em)',
             width: '100%',
             background: 'transparent',
             color: original === value ? yellow : green,
@@ -896,13 +951,12 @@ const loadRoute = route => {
             }
             query(`UPDATE ${TABLE} SET ${name}="${input.value}" ${WHERE}`)
               .then(res => {
-                if (Number(res.info.affectedRows)) {
-                  value = field.value = input.value
-                  href && (link.href = getLinkedHref(links, field, value))
-                  refresh()
-                } else {
+                if (!Number(res.info.affectedRows)) {
                   throw Error('no changes done')
                 }
+                value = field.value = input.value
+                href && (link.href = getLinkedHref(links, field, value))
+                refresh()
               })
               .catch(err => (input.style.color = red,
                 console.error(err.message)))
@@ -932,8 +986,9 @@ const loadRoute = route => {
             padding: isText ? '0.5em' : undefined,
             paddingLeft: '0.5em',
             background: color.background,
-            margin: '0.5em 0.25em',
+            margin: '2px 0.25em',
             borderRadius: '0.25em',
+            width: 'calc(50% - 0.5em)',
           }, [
             link,
             input,
@@ -942,33 +997,70 @@ const loadRoute = route => {
         }
       }, table)
 
-      const left = []
-      const right = []
-      rawFieldList
-        .sort((a, b) => Number(a.field.pos) - Number(b.field.pos))
-        .forEach((c, i) => c
-          && ((specialCase.blacklist && specialCase.blacklist.has(c.field.name))
-            || (i % 2 ? right.push(c.el) : left.push(c.el))))
-
-      display(flex.style({ 
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-      }, [
-        specialCase.content && specialCase.content(first),
-        h.div.style({ flexGrow: '1' }, left),
-        h.div.style({ flexGrow: '1' }, right),
-      ]))
+      displayFields(rawFieldList
+        .filter(c => c && !specialCase.blacklist.has(c.field.name)),
+        specialCase.content && specialCase.content(first))
     })
+}
+
+const getLinkedHref = (links, field, value) => {
+  if (value === field.def) return
+  const link = links[field.name] || links[field.name.slice(0, -1)]
+  return link && (isFn(link) ? link(value) : `#/mangos/${link}/update/${value}`)
+}
+
+const empty = Object.freeze(Object.create(null))
+const isPrimary = field => field.ref === 'PRIMARY'
+const display = h.replaceContent(content)
+selectedTable(() => logo.scrollIntoView())
+const loadRoute = route => {
+  let [ dbName, tableName, action, ...params ] = route.split('/')
+  selectedTable.set(tableName)
+  const db = dbInfo[dbName]
+  if (!db) return displayDbSelection()
+
+  h.replaceContent(dbEl, tableLink({
+    href: `#/`,
+    style: { color: orange },
+  }, dbName))
+
+  const table = db[tableName]
+  if (!table) return displayTableSelection(db, dbName)
+
+  h.replaceContent(tableEl, tableLink({
+    href: `#/${dbName}/`,
+    style: { color: cyan },
+  }, tableName))
+
+  const primaryFields = filter.toArr(isPrimary, table)
+
+  if (/[0-9]+/.test(action)) {
+    params.unshift(action)
+    action = 'update'
+  }
+
+  const routeArgs = {
+    primaryFields,
+    tableName,
+    params,
+    table,
+    db: dbName,
+  }
+
+  switch (action) {
+    case 'where': return displayWhereSelector(routeArgs)
+    default: displayUpdateField(routeArgs)
+  }
 }
 
 query(`
   SELECT
+    a.DATA_TYPE as type,
     a.TABLE_NAME as tbl,
     a.COLUMN_NAME as name,
     a.TABLE_SCHEMA as db,
     a.COLUMN_DEFAULT as def,
     a.ORDINAL_POSITION as pos,
-    a.DATA_TYPE as type,
     b.CONSTRAINT_NAME as ref
   FROM INFORMATION_SCHEMA.COLUMNS as a
   LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE as b
@@ -977,7 +1069,11 @@ query(`
     AND a.COLUMN_NAME = b.COLUMN_NAME
   WHERE a.TABLE_SCHEMA != "information_schema"
   ORDER BY name
-`).then(each(r => g(g(dbInfo, r.db), r.tbl)[r.name] = r))
+`).then(each(r => {
+    r.pos = Number(r.pos)
+    // 
+    g(g(dbInfo, r.db), r.tbl)[r.name] = r
+  }))
   .then(() => {
     loadRoute(router())
     router(loadRoute)

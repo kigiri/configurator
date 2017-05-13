@@ -5,6 +5,7 @@ const kill = require('tree-kill')
 const { parse: parseUrl } = require('url')
 const { readFile: fsread, writeFile } = require('mz/fs')
 const { gzip } = require('mz/zlib')
+const kill  = require('tree-kill')
 const config = require('./tools/mangos-config')
 const allowedIp = require('./allowedIp')
 const { spawn } = require('child_process')
@@ -76,7 +77,10 @@ const end = (code, message, res) => {
   res.end(JSON.stringify(message))
 }
 
-const b64 = s => Buffer.from(decodeURIComponent(s), 'base64').toString('utf8')
+const b64 = s => Buffer
+  .from(s.replace(/\-/g, '+').replace(/\_/g, '/'), 'base64')
+  .toString('utf8')
+
 const matchParam = /.{3}([^\/]+).(.+)/
 const saveConfig = (req, res) => {
   const [ , key, value ] = req.url.split(matchParam).map(b64)
@@ -100,24 +104,19 @@ const execSql = (req, res) => query(b64(req.url.slice(3)))
 let serverSpawn
 (function restartServer() {
   serverSpawn = spawn(serverPath, [ '-c', configFile ])
-  serverSpawn.on('error', console.error)
   serverSpawn.on('close', restartServer)
-  serverSpawn.on('close', console.log)
   console.log(`starting ${serverPath} on ${serverSpawn.pid}`)
-  serverSpawn.stdout.on('data', data => process.stdout.write(data))
-  serverSpawn.stderr.on('data', data => process.stderr.write(data))
 })()
 
-const handleServer = (req, res) => {
-  req.url
-  kill(serverSpawn.pid, 'SIGKILL', () =>
-  end(200, 'dead', res))
-}
+const handleServerRestart = (req, res) =>
+  kill(serverSpawn.pid, 'SIGKILL', err => err
+    ? end(500, err.message, res)
+    : end(200, 'ok', res))
 
 const handlers = [
   saveConfig,
   execSql,
-  handleServer,
+  handleServerRestart,
 ]
 
 const server = http.createServer((req, res) => {
