@@ -466,7 +466,9 @@ const creatureContent = npc => {
         }, avg(npc.MaxLevel, npc.MinLevel)),
         h.span([
           npc.Name,
-          npc.Rank != 0 && ` (${wow.creature_template.Rank[npc.Rank]})`,
+          npc.Rank != 0
+            ? ` (${wow.creature_template.Rank[npc.Rank]})`
+            : undefined,
         ]),
         (npc.SubName && npc.SubName !== 'null')
           && h.div.style({ color: cyan }, `<${npc.SubName}>`),
@@ -818,7 +820,7 @@ const buildFieldInput = (field, name) => {
   const isList = /[^0-9]1$/.test(name)
   if (isList) {
     name = name.replace(/[^a-zA-Z]+$/, '')
-  } else if (/[0-9]+$/.test(name) || (name.toLowerCase() === 'entry')) return
+  } else if (/[0-9]+$/.test(name)) return
   const isText = field.type === "text"
   const specialCase = g(g(specialCases, field.db), field.tbl)
   const required = specialCase.required || (specialCase.required = new Set)
@@ -888,7 +890,12 @@ const selectQuery = (db, table, fields, params) => query(`
 
 const displaySearchResults = (db, table, fields, params) => {
   selectQuery(db, table, fields, params)
-    .then(console.log)
+    .then(r => {
+      if (!r.length) return display('no results')
+      display(h.table([
+        h.tr(fields.map(f => h.th(f)))
+      ].concat(r.map(row => h.tr(fields.map(f => h.td(row[f])))))))
+    })
 }
 
 const displayWhereSelector = ({ db, tableName, table, params, primaryFields }) => {
@@ -909,7 +916,7 @@ const displayWhereSelector = ({ db, tableName, table, params, primaryFields }) =
     href: location.hash,
     onclick: () => {
       const whereParams = {}
-      const fieldNames = primaryFields.map(e => e.name)
+      const fieldNames = []
       fields.forEach(({ input, field, selected, isList }) => {
         selected && fieldNames.push(field.name)
         if (input.value !== '') {
