@@ -1,6 +1,7 @@
 const http = require('http')
 const { isStr } = require('izi/is')
 const { join } = require('path')
+const kill = require('tree-kill')
 const { parse: parseUrl } = require('url')
 const { readFile: fsread, writeFile } = require('mz/fs')
 const { gzip } = require('mz/zlib')
@@ -20,7 +21,7 @@ const query = q => new Promise((s, f) =>
 const readFile = (path, opts) => fsread(join(__dirname, path), opts)
 
 const confPath = process.argv[2] || './'
-const serverPath = join(confPath, `/run/mangosd`)
+const serverPath = join(confPath, `/bin/mangosd`)
 const configFile = join(confPath, `/etc/mangosd.conf`)
 const conf = Object.create(null)
 
@@ -98,13 +99,19 @@ const execSql = (req, res) => query(b64(req.url.slice(3)))
 
 let serverSpawn
 (function restartServer() {
-  serverSpawn = spawn(serverPath)
+  serverSpawn = spawn(serverPath, [ '-c', configFile ])
+  serverSpawn.on('error', console.error)
   serverSpawn.on('close', restartServer)
+  serverSpawn.on('close', console.log)
+  console.log(`starting ${serverPath} on ${serverSpawn.pid}`)
+  serverSpawn.stdout.on('data', data => process.stdout.write(data))
+  serverSpawn.stderr.on('data', data => process.stderr.write(data))
 })()
 
 const handleServer = (req, res) => {
   req.url
-  kill(serverSpawn.pid)
+  kill(serverSpawn.pid, 'SIGKILL', () =>
+  end(200, 'dead', res))
 }
 
 const handlers = [
@@ -119,6 +126,7 @@ const server = http.createServer((req, res) => {
     || req.socket.remoteAddress
     || req.connection.socket.remoteAddress
 
+  console.log(ip)
   if (!allowedIp.has(ip)) return end(403, 'forbiden', res)
   req.ip = ip
   const handler = handlers[req.url[1]]
