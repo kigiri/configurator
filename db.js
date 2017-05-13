@@ -12,7 +12,7 @@ const keyHandler = require('izi/key-handler')
 // STATE
 const images = require('./images')
 const wowheadCdn = '//wow.zamimg.com/modelviewer/thumbs'
-const router = require('izi/router')
+const router = require('./router')
 const selectedTable = observ.check('')
 const dbInfo = Object.create(null)
 const colorKeys = [
@@ -90,6 +90,8 @@ const b64 = s => btoa(s.trim())
   .replace(/\//g, '_')
   .replace(/=+$/, '')
 
+b64.decode = s => atob(s.replace(/\-/g, '+').replace(/\_/g, '/'))
+
 const toJSON = r => r.ok
   ? r.json()
   : r.json().then(msg => Promise.reject(Error(msg)))
@@ -118,11 +120,29 @@ const query = a => {
   return fetch(`http://chupato.jcj.ovh/1/${b64(a)}`).then(toJSON)
 }
 
-const toKV = (v, k) => `${k}="${v}"`
-const querify = sep => params => map.toArr(toKV, params).join(sep)
-querify.comma = querify(', ')
-querify.and = querify(' AND ')
-querify.or = querify(' OR ')
+const toSQL = (v, k) => {
+  if (!isStr(v)) {
+    const test = toSQL('', v.value)
+    return '('+ Array(v.max)
+      .fill()
+      .map((_, i) => `${k}${i + 1}${test}`)
+      .join(' OR ') +')'
+  }
+  let not = ''
+  if (/^(not|!) /i.test(v.trim())) {
+    v = v.trim().replace(/^(not|!) /i, '')
+    not = 'NOT '
+  }
+  if (/^-?[0-9.,]+$/.test(v)) return `${k} ${not}IN (${v})`
+  if (/^-?[0-9.]+$/.test(v)) return not ? `${k}!=${v}` : `${k}=${v}`
+  if (/^-?[0-9.]+--?[0-9.]+$/.test(v)) {
+    const [ , start, end ] = v.split(/^(-?[0-9.]+)-(-?[0-9.]+)$/)
+    return `${k} ${not}BETWEEN ${start} AND ${end}`
+  }
+  if (/^[=<>]+-?[0-9.]+$/.test(v)) return `${k} ${not}${v}`
+  return `${k} ${not}LIKE "%${v}%"`
+}
+const querify = params => map.toArr(toSQL, params).join(' AND ')
 const toValue = v => `"${v}"`
 const toFields = params => `(${Object.keys(params).join(', ')})`
 const toValues = params => `(${map.toArr(toValue, params).join(', ')})`
@@ -226,7 +246,6 @@ const inputHeader = h.style({
 })
 
 const a = h.style('a', { textDecoration: 'none', color: 'inherit' })
-
 const dbEl = h.span()
 const tableEl = h.span()
 const primaryEl = h.span.style({ color: pink })
@@ -652,7 +671,7 @@ const specialCases = {
         RewSpellCast: 'spell_template',
         PrevQuestId: 'quest_template',
         NextQuestInChain: 'quest_template',
-      }
+      },
     },
     creature_questrelation: {
       links: { quest: 'quest_template', id: 'creature_template' },
@@ -693,7 +712,7 @@ const specialCases = {
       links: {
         Reagent: 'item_template',
         EffectItemType: 'item_template',
-      }
+      },
     },
     item_template: {
       links: {
@@ -705,14 +724,20 @@ const specialCases = {
         DisenchantID: 'disenchant_loot_template',
       },
       content: itemContent,
+      required: new Set([
+        'entry',
+        'Quality',
+        'name',
+        'icon',
+      ]),
       blacklist: new Set([
         'displayid',
         'icon',
         'class',
         'subclass',
-      ])
-    }
-  }
+      ]),
+    },
+  },
 }
 
 // APP
@@ -790,10 +815,14 @@ const displayTableSelection = (db, dbName) => {
 }
 
 const buildFieldInput = (field, name) => {
-  if (/^unk([0-9]+)?$/.test(name) || (name.toLowerCase() === 'entry')) return
+  const isList = /[^0-9]1$/.test(name)
+  if (isList) {
+    name = name.replace(/[^a-zA-Z]+$/, '')
+  } else if (/[0-9]+$/.test(name) || (name.toLowerCase() === 'entry')) return
   const isText = field.type === "text"
   const specialCase = g(g(specialCases, field.db), field.tbl)
   const required = specialCase.required || (specialCase.required = new Set)
+  const fieldInfo = { isList }
 
   const input = (isText ? textAreaEl : inuptBaseEl)({
     style: {
@@ -802,7 +831,6 @@ const buildFieldInput = (field, name) => {
       background: 'transparent',
       color: orange,
     },
-    dataset: { name },
     placeholder: field.def,
   })
 
@@ -813,28 +841,31 @@ const buildFieldInput = (field, name) => {
       lineHeight: '1.75em',
       cursor: 'pointer',
     },
-    onclick: () => required.has(name) || (input.dataset.selected
-      ? (input.dataset.selected = '', label.style.color = color.foreground)
-      : (input.dataset.selected = 1, label.style.color = green)),
-  }, name)
+    onclick: () => required.has(name) || (fieldInfo.selected
+      ? (fieldInfo.selected = false, label.style.color = color.foreground)
+      : (fieldInfo.selected = true, label.style.color = green)),
+  }, [
+    name,
+    isList ? h.span.style({ color: purple }, '*') : undefined
+  ])
 
   if (required.has(name)) {
-    input.dataset.selected = 1
+    fieldInfo.selected = true
     label.style.color = green
   }
 
-  return {
-    field,
-    el: labelEl.style({
-      flexDirection: isText ? 'column' : 'row',
-      padding: isText ? '0.5em' : undefined,
-      paddingLeft: '0.5em',
-      background: color.background,
-      margin: '2px 0.25em',
-      borderRadius: '0.25em',
-      width: 'calc(50% - 0.5em)',
-    }, [ label, input ]),
-  }
+  fieldInfo.input = input
+  fieldInfo.field = field
+  fieldInfo.el = labelEl.style({
+    flexDirection: isText ? 'column' : 'row',
+    padding: isText ? '0.5em' : undefined,
+    paddingLeft: '0.5em',
+    background: color.background,
+    margin: '2px 0.25em',
+    borderRadius: '0.25em',
+    width: 'calc(50% - 0.5em)',
+  }, [ label, input ])
+  return fieldInfo
 }
 
 const wrappedFlex = h.style({
@@ -849,26 +880,55 @@ const displayFields = (fields, headerContent) => display(wrappedFlex([
   wrappedFlex(fields.sort(byFieldPos).map(c => c.el)),
 ]))
 
-const execFindWhere = () => {
-  const whereParams = {}
-  const fields = new Set()
-  _tag('input').concat(_tag('textarea'))
-    .forEach(el => {
-      el.dataset.selected && fields.add(el.dataset.name)
-      el.value && (whereParams[el.dataset.name] = el.value)
-    })
-  console.log(whereParams, fields)
+const selectQuery = (db, table, fields, params) => query(`
+  SELECT ${fields.join(', ')}
+  FROM ${db}.${table}
+  WHERE ${isStr(params) ? params : querify(params)}
+`)
+
+const displaySearchResults = (db, table, fields, params) => {
+  selectQuery(db, table, fields, params)
+    .then(console.log)
 }
 
 const displayWhereSelector = ({ db, tableName, table, params, primaryFields }) => {
   h.replaceContent(primaryEl, 'where')
-  displayFields(map.toArr(buildFieldInput, table).filter(Boolean), flex.style({
-    width: '100%',
-  }, dbLink({
+  const [ hash ] = params
+  if (hash) {
+    try {
+      return displaySearchResults(db, tableName,
+        ...JSON.parse(`[[${b64.decode(hash)}"}]`))
+    } catch (err) {
+      return router.set(`${db}/${tableName}/where/`)
+    }
+  }
+
+  const fields = map.toArr(buildFieldInput, table).filter(Boolean)
+  const btn = dbLink({
     style: { color: purple, marginBottom: '1em', },
     href: location.hash,
-    onclick: execFindWhere,
-  }, `find in ${tableName}`)))
+    onclick: () => {
+      const whereParams = {}
+      const fieldNames = primaryFields.map(e => e.name)
+      fields.forEach(({ input, field, selected, isList }) => {
+        selected && fieldNames.push(field.name)
+        if (input.value !== '') {
+          if (!isList) return whereParams[field.name] = input.value
+          let i = 1
+          while (table[`${field.name}${i}`]) { i++ }
+          whereParams[field.name] = { max: i - 1, value: input.value }
+        }
+      })
+      if (!Object.keys(whereParams).length) {
+        setTimeout(() => btn.style.color = purple, 500)
+        return btn.style.color = red
+      }
+      const q = b64(JSON.stringify([ fieldNames, whereParams ]).slice(2, -3))
+      location.hash = `/${db}/${tableName}/where/${q}/`
+    },
+  }, `find in ${tableName}`)
+
+  displayFields(fields, flex.style({ width: '100%' }, btn))
 }
 
 const displayUpdateField = ({ db, tableName, table, params, primaryFields }) => {
@@ -896,7 +956,7 @@ const displayUpdateField = ({ db, tableName, table, params, primaryFields }) => 
           `${first[field.name]}`,
         ])))
 
-      const specialCase = g(g(specialCases, field.db), field.tbl)
+      const specialCase = g(g(specialCases, db), tableName)
       const links = g(specialCase, 'links')
       specialCase.blacklist || (specialCase.blacklist = new Set())
 
