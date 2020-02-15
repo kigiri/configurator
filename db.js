@@ -117,7 +117,7 @@ const getCost = cost => ({
 
 const query = a => {
   console.log('executing query', a)
-  return fetch(`http://chupato.jcj.ovh/1/${b64(a)}`).then(toJSON)
+  return fetch(`https://chupato.cdenis.net/1/${b64(a)}`).then(toJSON)
 }
 
 const toSQL = (v, k) => {

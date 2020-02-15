@@ -9,16 +9,14 @@ const kill  = require('tree-kill')
 const config = require('./tools/mangos-config')
 const allowedIp = require('./allowedIp')
 const { spawn } = require('child_process')
-const MariaDBSqlClient = require('mariasql')
-const dbClient = new MariaDBSqlClient({
+const mariadb = require('mariadb')
+const pendingConn = mariadb.createPool({
   host: '127.0.0.1',
-  user: 'mangos',
-  password: 'mangos',
-})
+  user: 'root',
+  connextionLimit: 5,
+}).then(pool => pool.getConnection())
 
-const query = q => new Promise((s, f) =>
-  dbClient.query(q, (e, r) => e ? f(e) : s(r)))
-
+const query = async q => (await pendingConn).query(q)
 const readFile = (path, opts) => fsread(join(__dirname, path), opts)
 
 const confPath = process.argv[2] || './'
