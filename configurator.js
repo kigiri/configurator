@@ -147,7 +147,11 @@ const scriptFn = () => {
       const { value } = form[0]
       const { i, key, source } = form.dataset
       form.className = 'changing'
-      const rest = await fetch(`/set?${new URLSearchParams({ i, key, value })}`)
+      const rest = await fetch([
+        `/set?i=${i}`,
+        `key=${encodeURIComponent(key)}`,
+        `value=${encodeURIComponent(value)}`,
+      ].join('&'))
       form.className = value === source ? 'default' : 'changed'
       form.dataset.value = value
     } catch (err) {
@@ -224,7 +228,7 @@ const generateBody = configs => `<!DOCTYPE html>
         ${description ? `<pre>${description}</pre>` : ''}
       </form>`).join('\n')}
     </div>
-  </div>`).join('\n')}`)}
+  </div>`).join('\n')}`).join('\n')}
   <script>${script}</script>
 </body>
 </html>`
@@ -306,5 +310,6 @@ for await (const req of serve({ port: PORT })) {
  *   client: display form states with css (saving / failed / etc...)
  *   config: env var & argv
  *   server: log & fail if no files found
+ *   client: auto-update anchor in url
  *
  */
