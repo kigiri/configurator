@@ -142,13 +142,15 @@ pre {
 `
 
 const scriptFn = () => {
+  const { pathname } = location
+  const path = pathname.endsWith('/') ? pathname : `${pathname}/`
   const save = async form => {
     try {
       const { value } = form[0]
       const { i, key, source } = form.dataset
       form.className = 'changing'
       const rest = await fetch([
-        `set?i=${i}`,
+        `${path}set?i=${i}`,
         `key=${encodeURIComponent(key)}`,
         `value=${encodeURIComponent(value)}`,
       ].join('&'))
