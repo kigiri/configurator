@@ -148,7 +148,7 @@ const scriptFn = () => {
       const { i, key, source } = form.dataset
       form.className = 'changing'
       const rest = await fetch([
-        `/set?i=${i}`,
+        `set?i=${i}`,
         `key=${encodeURIComponent(key)}`,
         `value=${encodeURIComponent(value)}`,
       ].join('&'))
@@ -286,9 +286,6 @@ route['/set'] = async ({ i, key, value }) => {
   await saveConfig(file, { ...config, [key]: { value } })
   return 'OK'
 }
-
-route['/quit'] = () => Deno.exit(0)
-await fetch(`http://localhost:${PORT}/quit`).catch(err => {})
 
 console.log('listening on port:', PORT)
 for await (const req of serve({ port: PORT })) {
