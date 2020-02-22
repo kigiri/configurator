@@ -1,8 +1,9 @@
 import { readFileStr, ensureFile, writeFileStr } from 'https://deno.land/std/fs/mod.ts'
 import { join } from 'https://deno.land/std/path/mod.ts'
 import { slugify } from 'https://deno.land/x/slugify/mod.ts'
+import { green, bold } from 'https://deno.land/std/fmt/colors.ts'
 
-import { serve, boom } from './_server.js'
+import { serve, boom, makePage } from './_server.js'
 
 // ENV
 const PORT = 8686
@@ -248,7 +249,7 @@ route['GET /set'] = async ({ i, key, value }) => {
   return 'OK'
 }
 
-await serve(route, PORT)
+await serve(route, PORT, bold(green('config')))
 
 /* todo:
  *   client: display form states with css (saving / failed / etc...)

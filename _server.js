@@ -8,17 +8,16 @@ const dec = new TextDecoder()
 const readBodyStr = async req => dec.decode(await Deno.readAll(req.body))
 const readBody = async req => {
   const contentType = req.headers.get('content-type')
-  if (!req.body || !contentType) return ''
+  if (!req.body || !contentType) return
  
-  console.log('parsing: content-type', contentType)
   try {
-    if (contentType === 'text/plain') return await readBodyStr(req.body)
+    if (contentType === 'text/plain') return await readBodyStr(req)
     if (contentType === 'application/json') {
-      return JSON.parse(await readBodyStr(req.body))
+      return JSON.parse(await readBodyStr(req))
     }
 
     if (contentType === 'application/x-www-form-urlencoded') {
-      const bodyStr = await readBodyStr(req.body)
+      const bodyStr = await readBodyStr(req)
       const params = new URLSearchParams(decodeURIComponent(bodyStr))
       return Object.fromEntries(params)
     }
@@ -27,30 +26,50 @@ const readBody = async req => {
   }
 }
 
-export const serve = async (routes, port) => {
-  console.log('listening on port:', port)
-  for await (const req of httpServe({ port })) {
-    const { pathname, searchParams } = new URL(`http://localhost${req.url}`)
-    const routeKey = `${req.method} ${pathname}`
-    const handler = routes[routeKey]
-    console.log({ method: req.method, pathname, url: req.url })
-    try {
-      if (!handler) boom.NotFound(Error(`no handlers for ${routeKey}`))
+export const getIp = req =>
+  req.headers.get('x-forwarded-for')
+  || req.headers.get('x-real-ip')
+  || req.conn.remoteAddr
 
-      const body = await readBody(req)
-      const params = body || Object.fromEntries(searchParams)
+export const getUser = req => {
+  try { return atob(req.headers.get('authorization').split(' ')[1]).split(':')[0] }
+  catch { return '' }
+}
 
-      req.respond({ body: await handler(params, req) })
-      console.log('OK')
+export const json = data => {
+  const headers = new Headers()
+  headers.set('content-type', 'application/json')
+  return { headers, body: JSON.stringify(data) }
+}
 
-    } catch (err) {
-      console.error(err)
-      const status = err.status || Status.InternalServerError
-      req.respond({ body: STATUS_TEXT[status], status })
-      console.log('NOT OK')
-    }
+const handleRequest = async (req, routes, base) => {
+  const { pathname, searchParams } = new URL(`http://localhost${req.url}`)
+  if (pathname === '/ping') return req.respond({body: 'ok'})
+  if (pathname === '/kill') {
+    req.respond({body: 'ok'})
     await req.done
-    console.log('DONE')
+    Deno.exit(1)
+  }
+  const routeKey = `${req.method} ${pathname}`
+  const handler = routes[routeKey]
+  console.log(base, routeKey)
+  if (!handler) boom.NotFound(Error(`no handlers for ${routeKey}`))
+  const params = (await readBody(req)) || Object.fromEntries(searchParams)
+  return handler(params, req)
+}
+
+const rand = () => Math.random().toString(36).slice(2).padStart(11, '0')
+export const serve = async (routes, port, base) => {
+  console.log(base, 'listening on port:', port)
+  for await (const req of httpServe({ port })) {
+    handleRequest(req, routes, base).then(
+      body => req.respond(typeof body === 'string' ? { body } : (body||{body:'ok'})),
+      err => {
+        console.error(err)
+        const status = err.status || Status.InternalServerError
+        req.respond({ body: err.message, status })
+      }
+    )
   }
 }
 
@@ -61,7 +80,7 @@ const scriptToString = script => typeof script === 'function'
 export const makePage = ({ title, script, body, style }) => `<!DOCTYPE html>
 <html>
 <head>
-  <title>${title}</title>
+  <title>${title||'Page'}</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAx42QAFP/FABXQkMAQC0uAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAQBEREREREREAFEREREREQQAURERERERBABREREREREEAFEREREREQQAURERERERBABQERAAEREEAFCBEIiREQQAUQgRERERBABRAJEREREEAFAJEREREQQAUJERERERBABRERERERDEAEREREREREQQAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
@@ -96,12 +115,36 @@ body {
 h1,h2,h3 { font-weight: normal }
 h1 { color: var(--pink) }
 h2 { color: var(--cyan) }
-${style}
-
+a {
+  color: var(--orange);
+  text-decoration: none;
+}
+a:visited { color: var(--purple) }
+a:active { color: var(--#d4b5ff) }
+${style||''}
   </style>
+  <script>
+  if (location.search === '?debug=true') {
+    console.log('debug mode on, CTRL+R will restart the server')
+    window.addEventListener('keydown', async e => {
+      if (e.key !== 'r' || !e.ctrlKey) return
+      e.preventDefault()
+      const path = '/admin/'+location.pathname.split('/')[2]
+      await fetch(path+'/kill')
+      await new Promise(s => setTimeout(s, 3000))
+      while (true) {
+        if ((await fetch(path+'/ping')).status === 200) {
+          console.log('ping success, reload')
+          window.location.reload()
+        }
+        await new Promise(s => setTimeout(s, 300))
+      }
+    })
+  }
+  </script>
 </head>
-<body>${body}
-  <script type="module">${scriptToString(script)}</script>
+<body>${body||''}
+  <script type="module">${scriptToString(script||'')}</script>
 </body>
 </html>
 `
