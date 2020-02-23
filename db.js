@@ -1,4 +1,6 @@
 const script = () => {
+
+// TOOLS
 const isNum = x => typeof x === 'number'
 const isStr = x => typeof x === 'string'
 const isFn = x => typeof x === 'function'
@@ -128,26 +130,6 @@ const _key = el => el.tagName === 'DIV' ? 'textContent' : 'value'
 const _getVal = el => el[_key(el)]
 const _setVal = (el, value) => el[_key(el)] = value
 
-// STATE
-const images =  {
-  logo: 'data:image/png;base64,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',
-  quest: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAdCAMAAACUsxyNAAAAqFBMVEUAAAAAAAAAAAAAAAACAAAAAgIAAACliy8AAQMAAAD3z0IABAgAAAgAAAAAAggAAAAAAAAAAAUAAAcAAAAAAAAAAAAAAAkHBQAAAAAAAAAJAAAAAggIAgAIBAj/9wj/4wj/0wj/vgj/ugj/6xD/ywjv1xgYEBDnmgitfgj320IQBBBaQQaUdUK4oC+lki9SSRuqnQ2ynQuvjgtaRAOfkRNgSQ2aZwVNMwP3F5REAAAAG3RSTlMA/mwlSB8E/oAM/r+9kHpvTxkV956ZdG1XRzuEqg3UAAAAyElEQVQYGQXBwU7CQBQAwNm3LViiAbFoNP7/P3nzgIkmRgO1qba06wwAgITbeVHM8wQVeQN4g4pFW7xoxYIQ2nGacv5UMqrV9Lz0HFgrCI4AIFwrYE8gBAAFMXaaiIgYhv2MEHqQjRAKezjrIcwAHqCi7ZZQe7WDoJOxdfcNwc55tZL8gIqx1jsyg4T7GrrqC4KoHa4e3TQNBMWhc9pwgYAOWKBCSswSELBFQ0CQffxux5NpgoSngPcLSNCsS/obAAAAAAAAAPwDmGtBZfVV/nYAAAAASUVORK5CYII=',
-}
-
-const wowheadCdn = '//wow.zamimg.com/modelviewer/thumbs'
-const loc = window.location
-const parseRoute = hash => hash.split('?')[0].slice(2)
-const router = observ(parseRoute(loc.hash))
-
-const routerSet = router.set
-window.addEventListener('hashchange', ev =>
-  routerSet(parseRoute(new URL(ev.newURL).hash)))
-
-router.set = hash => loc.hash = `/${hash}`
-
-const selectedTable = observ('')
-const dbInfo = Object.create(null)
-
 const bitFlags = list => {
   const ret = list.map((name, index) => ({
     value: Math.pow(2, index),
@@ -158,7 +140,42 @@ const bitFlags = list => {
   ret.bitFlags = true
   return ret
 }
+const g = (s, k) => s[k] || (s[k] = {})
+const _tag = tag => Array.from(document.getElementsByTagName(tag))
+const b64 = s => btoa(s.trim())
+  .replace(/\+/g, '-')
+  .replace(/\//g, '_')
+  .replace(/=+$/, '')
 
+b64.decode = s => atob(s.replace(/\-/g, '+').replace(/\_/g, '/'))
+
+const toJSON = r => r.ok
+  ? r.json()
+  : r.text()
+    .then(msg => Promise.reject(Error(msg)))
+
+const avg = (...args) => Math.round(args
+  .map(Number)
+  .reduce((t, n) => (n + t) / 2))
+
+const getLevelColor = lvl => {
+  lvl = Number(lvl)
+  if (lvl > 25) return red
+  if (lvl > 22) return orange
+  if (lvl > 16) return color.blizz.yellow
+  if (lvl > 13) return green
+  return color.blizz.grey
+}
+
+const getCost = cost => [
+  ['gold', Math.floor(cost / 10000)],
+  ['silver', Math.floor((cost % 10000) / 100)],
+  ['copper', Math.floor(cost % 100)],
+].filter(([,v]) => v)
+
+
+
+// GAME DATA
 const Rank = [
   'Normal',
   'Elite',
@@ -302,6 +319,16 @@ const classes = bitFlags([
  'Druid',
 ])
 
+const dmgTypes = [
+  'Physical',
+  'Holy',
+  'Fire',
+  'Nature',
+  'Frost',
+  'Shadow',
+  'Arcane',
+]
+
 const race = bitFlags([
   'Human',
   'Orc',
@@ -311,19 +338,19 @@ const race = bitFlags([
   'Tauren',
   'Gnome',
   'Troll',
-  'Goblin',
+//  'Goblin',
   'Blood Elf',
   'Draenei',
-  'Fel Orc',
-  'Naga',
-  'Broken',
-  'Skeleton',
-  'Vrykul',
-  'Tuskarr',
-  'Forest Troll',
-  'Taunka',
-  'Northrend Skeleton',
-  'Ice Troll',
+//  'Fel Orc',
+//  'Naga',
+//  'Broken',
+//  'Skeleton',
+//  'Vrykul',
+//  'Tuskarr',
+//  'Forest Troll',
+//  'Taunka',
+//  'Northrend Skeleton',
+//  'Ice Troll',
 ])
 
 const powerType = [
@@ -460,11 +487,188 @@ const skill = {
   393: 'Skinning',
 }
 
+const TrainerType = [
+  'Class',
+  'Mounts',
+  'Tradeskills',
+  'Pets',
+]
+
 const creature_template = {
   Rank,
   Family,
   CreatureType,
   RegenerateStats,
+  TrainerType,
+  NpcFlags: bitFlags([
+    'Gossip', // Gossip  If creature has more gossip options, add this flag to bring up a menu.
+    'Quest Giver', // Quest Giver Any creature giving or taking quests needs to have this flag.
+    '', // 
+    '', // 
+    'Trainer', // Trainer Allows the creature to have a trainer list to teach spells
+    'Trainer_Class', // Trainer_Class Allows the creature to have a class trainer list to teach spells. (MUST USE WITH FLAG: 16)
+    'Trainer_Profession', // Trainer_Profession  Allows the creature to have a profession trainer list to teach spells     (MUST USE WITH FLAG: 16)
+    'Vendor', // Vendor  Any creature selling items needs to have this flag.
+    'Vendor_Ammo', // Vendor_Ammo Any creature selling ammo items needs to have this flag. (MUST USE WITH FLAG: 128)
+    'Vendor_Food', // Vendor_Food Any creature selling food items needs to have this flag. (MUST USE WITH FLAG: 128)
+    'Vendor_Poison', // Vendor_Poison Any creature selling poison items needs to have this flag. (MUST USE WITH FLAG: 128)
+    'Vendor_Reagent', // Vendor_Reagent  Any creature selling reagent items needs to have this flag. (MUST USE WITH FLAG: 128)
+    'Repairer', // Repairer  Creatures with this flag can repair items.
+    'Flight Master', // Flight Master Any creature serving as fly master has this.
+    'Spirit Healer', // Spirit Healer Makes the creature invisible to alive characters and has the resurrect function.
+    'Spirit Guide', // Spirit Guide
+    'Innkeeper', // Innkeeper Creatures with this flag can set hearthstone locations.
+    'Banker', // Banker  Creatures with this flag can show the bank
+    'Petitioner', // Petitioner  
+    'Tabard Designer', // Tabard Designer Allows the designing of guild tabards.
+    'Battlemaster', // Battlemaster  Creatures with this flag port players to battlegrounds.
+    'Auctioneer', // Auctioneer  Allows creature to display auction list.
+    'Stable Master', // Stable Master Has the option to stable pets for hunters.
+    'Guild Banker', // Guild Banker  cause client to send 997 opcode
+    '', // SpellClick/Instantloot  cause client to send 1015 opcode (spell click), dynamic, set at loading and don’t must be set in DB. (Npc_spellclick_spells)
+    'Player Vehicle', // Player Vehicle  players with mounts that have vehicle data should have it set
+    '', // 
+    '', // 
+    'Guard', // Guard ? Creatures with this flag act as guards in cities.
+  ]),
+  Faction: faction,
+  UnitFlags: bitFlags([
+    '', // Movement checks disabled, likely paired with loss of client control packet.
+    'Non attackable', // not attackable
+    'Client control lost', // Generic unspecified loss of control initiated by server script, movement checks disabled, paired with loss of client control packet.
+    'Player controlled', // players, pets, totems, guardians, companions, charms, any units associated with players
+    'Rename',
+    'Preparation', // don’t take reagents for spells with SPELL ATTR EX5 NO REAGENT WHILE PREP
+    '', // Related to Movement? often paired with UNIT FLAG SWIMMING
+    'Not attackable 1', // UNIT FLAG PVP + UNIT FLAG NOT ATTACKABLE 1 = UNIT FLAG NON PVP ATTACKABLE – blue color target
+    'Immune to player', // Target is immune to players
+    'Immune to npc', // makes you unable to attack everything. Almost identical to our “civilian”-term. Will ignore it’s surroundings and not engage in combat unless “called upon” or engaged by another unit.
+    'Looting', // loot animation
+    'Pet in combat', // in combat?, 2.0.8
+    'PvP', // Allows item spells to be casted upon. changed in 3.0.3
+    'Silenced', // silenced, 2.1.1
+    'Persuaded', // persuaded, 2.0.8
+    'Swimming', // controls water swimming animation – TODO: confirm whether dynamic or static
+    'Non attackable 2', // removes attackable icon, if on yourself, cannot assist self but can cast TARGET SELF spells – added by SPELL AURA MOD UNATTACKABLE
+    'Pacified', // pacified, 3.0.3
+    'Stunned', // stunned, 2.1.1 Unit is a subject to stun, turn and strafe movement disabled
+    'In combat', // 
+    'Taxi flight', // Unit is on taxi, paired with a duplicate loss of client control packet (likely a legacy serverside hack). Disables any spellcasts not allowed in taxi flight client-side.
+    'Disarmed', // disable melee spells casting…, “Required melee weapon” added to melee spells tooltip.
+    'Confused', // Unit is a subject to confused movement, movement checks disabled, paired with loss of client control packet.
+    'Fleeing', // Unit is a subject to fleeing movement, movement checks disabled, paired with loss of client control packet.
+    'Possessed', // Unit is under remote control by another unit, movement checks disabled, paired with loss of client control packet. New master is allowed to use melee attack and can’t select this unit via mouse in the world (as if it was own character).
+    'Not selectable', // Can’t be selected by mouse
+    'Skinnable', // 
+    'Mount', // the client seems to handle it perfectly
+    '', // 
+    '', // used in Feing Death spell
+    'Sheathe', // 
+  ]),
+  DynamicFlags: bitFlags([
+    'Lootable',
+    'Track unit',
+    'Tapped', // Lua UnitIsTapped – Makes creatures name appear grey (good for simulating dead creatures) ???
+    'Tapped by player', // Lua UnitIsTappedByPlayer
+    'Show Creature Stats', //  Shows creatures basic stats (Health, damage, resistances, tamable).
+    'Dead', // Makes the creature appear dead (this DOES NOT make the creatures name grey)
+    'Refer a friend',
+    'Tapped by all threat list', //  Lua UnitIsTappedByAllThreatList
+  ]),
+  Civilian: [ 'Normal', 'Civilian' ],
+  MovementType: [ 'Stationary', 'Random', 'Waypoint' ],
+  SchoolImmuneMask: bitFlags(dmgTypes),
+  DamageSchool: dmgTypes,
+  MechanicImmuneMask: bitFlags([
+    'Charm',
+    'Confused',
+    'Disarm',
+    'Distract',
+    'Fear',
+    'Fumble',
+    'Root',
+    'Pacify',
+    'Silence',
+    'Sleep',
+    'Snare',
+    'Stun',
+    'Freeze',
+    'Knockout',
+    'Bleed',
+    'Bandage',
+    'Polymorph',
+    'Banish',
+    'Shield',
+    'Shackle',
+    'Mount',
+    'Persuade',
+    'Turn',
+    'Horror',
+    'Invulnerability',
+    'Interrupt',
+    'Daze',
+    'Discovery',
+    'Immune Shield',
+    'Sapped',
+  ]),
+  AIName: {
+    NullAI: 'NullAI - Do nothing.',
+    AggressorAI: 'AggressorAI - Attacks in aggro range.',
+    ReactorAI: 'ReactorAI - Attacks if attacked',
+    GuardAI: 'GuardAI',
+    PetAI: 'PetAI',
+    TotemAI: 'TotemAI - Casts spell from field spell1',
+    EventAI: 'EventAI - Event Based AI',
+  },
+  ExtraFlags: bitFlags([
+    'Instance bind', // creature kill bind instance with killer and killer’s group
+    'No aggro on sight', // no aggro (ignore faction/reputation hostility)
+    'No parry', //  creature can’t parry
+    'No parry hasten', // creature can’t counter-attack at parry
+    'No block', //  creature can’t block
+    'No crush', //  creature can’t do crush attacks
+    'No xp at kill', // creature kill not provide XP
+    'Invisible', // creature is always invisible for player (mostly trigger creatures)
+    'Not tauntable', // creature is immune to taunt auras and effect attack me
+    'Aggro zone', //  creature sets itself in combat with zone on aggro
+    'Guard', // creature is a guard
+    'No call assist', //  creature shouldn’t call for assistance on aggro
+    'Active', //  creature is active object. Grid of this creature will be loaded and creature set as active
+    'Mmap force enable', // creature is forced to use MMaps
+    'Mmap force disable', //  creature is forced to NOT use MMaps
+    'Walk in water', // creature is forced to walk in water even it can swim
+    'Civilian', //  CreatureInfo→civilian substitute (for expansions as Civilian Colum was removed)
+    'No melee', //  creature can’t melee
+    'Far view', //  creature with far view
+    'Force attacking capability', //  SetForceAttackingCapability(true); for nonattackable, nontargetable creatures that should be able to attack nontheless
+    'Ignore used position', //  ignore creature when checking used positions around target
+    'Count spawns', //  count creature spawns in Map*
+    'Haste spell immunity', //
+  ]),
+  CreatureTypeFlags: bitFlags([
+    'Tameable', // Makes the mob tameable (must also be a beast and have family set)
+    'Ghost Visible', // Sets Creatures that can ALSO be seen when player is a ghost. Used in CanInteract function by client, can’t be attacked
+    'Boss', // Sets “BOSS” flag for tooltips
+    '',
+    '', // Controls something in client tooltip related to creature faction
+    '', // Something related to Sound
+    '', // Related to attackable / not attackable creatures with spells
+    'Interact Dead', //  has something to do with unit interaction / quest status requests
+    'Herb loot', // Makes Mob Corpse Herbable – Uses Skinning Loot Field
+    'Mining loot', // Makes Mob Corpse Mineable – Uses Skinning Loot Field
+    '', //  no idea, but it used by client
+    'Can cast mounted', //  related to possibility to cast spells while mounted
+    'Can Assist', // Can aid any player or group in combat. Typically seen for escorting NPC’s
+    '', //  checked from calls in Lua PetHasActionBar
+    '', //  Lua_UnitGUID, client does guid_low &= 0xFF000000 if this flag is set
+    'Engineer loot', // Makes Mob Corpse Engineer Lootable – Uses Skinning Loot Field
+  ]),
+  UnitClass: {
+    1: 'Warrior',
+    2: 'Paladin',
+    4: 'Rogue',
+    8: 'Mage',
+  },
 }
 
 const quest_template = {
@@ -524,58 +728,47 @@ const item_template = {
   ...Object.fromEntries([...Array(11).keys()].slice(1).map(i => [
     `stat_type${i}`,
     [
-      'ITEM_MOD_HEALTH',
+      '', // Health
       '',
-      'ITEM_MOD_AGILITY',
-      'ITEM_MOD_STRENGTH',
-      'ITEM_MOD_INTELLECT',
-      'ITEM_MOD_SPIRIT',
-      'ITEM_MOD_STAMINA',
-      '',
-      '',
+      'Agility',
+      'Strength',
+      'Intellect',
+      'Spirit',
+      'Stamina',
       '',
       '',
-      'ITEM_MOD_DEFENSE_SKILL_RATING',
-      'ITEM_MOD_DODGE_RATING',
-      'ITEM_MOD_PARRY_RATING',
-      'ITEM_MOD_BLOCK_RATING',
-      'ITEM_MOD_HIT_MELEE_RATING',
-      'ITEM_MOD_HIT_RANGED_RATING',
-      'ITEM_MOD_HIT_SPELL_RATING',
-      'ITEM_MOD_CRIT_MELEE_RATING',
-      'ITEM_MOD_CRIT_RANGED_RATING',
-      'ITEM_MOD_CRIT_SPELL_RATING',
-      'ITEM_MOD_HIT_TAKEN_MELEE_RATING',
-      'ITEM_MOD_HIT_TAKEN_RANGED_RATING',
-      'ITEM_MOD_HIT_TAKEN_SPELL_RATING',
-      'ITEM_MOD_CRIT_TAKEN_MELEE_RATING',
-      'ITEM_MOD_CRIT_TAKEN_RANGED_RATING',
-      'ITEM_MOD_CRIT_TAKEN_SPELL_RATING',
-      'ITEM_MOD_HASTE_MELEE_RATING',
-      'ITEM_MOD_HASTE_RANGED_RATING',
-      'ITEM_MOD_HASTE_SPELL_RATING',
-      'ITEM_MOD_HIT_RATING',
-      'ITEM_MOD_CRIT_RATING',
-      'ITEM_MOD_HIT_TAKEN_RATING',
-      'ITEM_MOD_CRIT_TAKEN_RATING',
-      'ITEM_MOD_RESILIENCE_RATING',
-      'ITEM_MOD_HASTE_RATING',
-      'ITEM_MOD_EXPERTISE_RATING',
+      '',
+      '',
+      'Defense skill',
+      'Dodge',
+      'Parry',
+      'Block',
+      '', // Hit melee
+      '', // Hit ranged
+      '', // Hit spell
+      '', // Crit melee
+      '', // Crit ranged
+      '', // Crit spell
+      '', // Hit taken melee
+      '', // Hit taken ranged
+      '', // Hit taken spell
+      '', // Crit taken melee
+      '', // Crit taken ranged
+      '', // Crit taken spell
+      '', // Haste melee
+      '', // Haste ranged
+      '', // Haste spell
+      'Hit',
+      'Crit',
+      '', // Hit taken
+      '', // Crit taken
+      'Resilience',
+      'Haste',
+      'Expertise',
     ]
   ])),
   // dmg_type1
-  ...Object.fromEntries([...Array(6).keys()].slice(1).map(i => [
-    `dmg_type${i}`,
-    [
-      /* 0  */ 'Physical',
-      /* 1  */ 'Holy',
-      /* 2  */ 'Fire',
-      /* 3  */ 'Nature',
-      /* 4  */ 'Frost',
-      /* 5  */ 'Shadow',
-      /* 6  */ 'Arcane',
-    ],
-  ])),
+  ...Object.fromEntries([...Array(6).keys()].slice(1).map(i => [ `dmg_type${i}`, dmgTypes ])),
   RequiredReputationRank: [
     /* 0  */ 'Hated',
     /* 1  */ 'Hostile',
@@ -927,42 +1120,30 @@ color.blizz.quality = [
 
 const { cyan, green, orange, pink, red, purple, yellow } = color
 
-const wow = { creature_template, quest_template, item_template }
 
-// LIB
-const g = (s, k) => s[k] || (s[k] = {})
-const _tag = tag => Array.from(document.getElementsByTagName(tag))
-const b64 = s => btoa(s.trim())
-  .replace(/\+/g, '-')
-  .replace(/\//g, '_')
-  .replace(/=+$/, '')
-
-b64.decode = s => atob(s.replace(/\-/g, '+').replace(/\_/g, '/'))
-
-const toJSON = r => r.ok
-  ? r.json()
-  : r.text()
-    .then(msg => Promise.reject(Error(msg)))
-
-const avg = (...args) => Math.round(args
-  .map(Number)
-  .reduce((t, n) => (n + t) / 2))
-
-const getLevelColor = lvl => {
-  lvl = Number(lvl)
-  if (lvl > 25) return red
-  if (lvl > 22) return orange
-  if (lvl > 16) return color.blizz.yellow
-  if (lvl > 13) return green
-  return color.blizz.grey
+// STATE
+const images =  {
+  logo: 'data:image/png;base64,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',
+  quest: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAdCAMAAACUsxyNAAAAqFBMVEUAAAAAAAAAAAAAAAACAAAAAgIAAACliy8AAQMAAAD3z0IABAgAAAgAAAAAAggAAAAAAAAAAAUAAAcAAAAAAAAAAAAAAAkHBQAAAAAAAAAJAAAAAggIAgAIBAj/9wj/4wj/0wj/vgj/ugj/6xD/ywjv1xgYEBDnmgitfgj320IQBBBaQQaUdUK4oC+lki9SSRuqnQ2ynQuvjgtaRAOfkRNgSQ2aZwVNMwP3F5REAAAAG3RSTlMA/mwlSB8E/oAM/r+9kHpvTxkV956ZdG1XRzuEqg3UAAAAyElEQVQYGQXBwU7CQBQAwNm3LViiAbFoNP7/P3nzgIkmRgO1qba06wwAgITbeVHM8wQVeQN4g4pFW7xoxYIQ2nGacv5UMqrV9Lz0HFgrCI4AIFwrYE8gBAAFMXaaiIgYhv2MEHqQjRAKezjrIcwAHqCi7ZZQe7WDoJOxdfcNwc55tZL8gIqx1jsyg4T7GrrqC4KoHa4e3TQNBMWhc9pwgYAOWKBCSswSELBFQ0CQffxux5NpgoSngPcLSNCsS/obAAAAAAAAAPwDmGtBZfVV/nYAAAAASUVORK5CYII=',
 }
 
-const getCost = cost => [
-  ['gold', Math.floor(cost / 10000)],
-  ['silver', Math.floor((cost % 10000) / 100)],
-  ['copper', Math.floor(cost % 100)],
-].filter(([,v]) => v)
+const wowheadCdn = '//wow.zamimg.com/modelviewer/thumbs'
+const loc = window.location
+const parseRoute = hash => hash.split('?')[0].slice(2)
+const router = observ(parseRoute(loc.hash))
 
+const routerSet = router.set
+window.addEventListener('hashchange', ev =>
+  routerSet(parseRoute(new URL(ev.newURL).hash)))
+
+router.set = hash => loc.hash = `/${hash}`
+
+const selectedTable = observ('')
+const dbInfo = Object.create(null)
+
+
+
+// QUERIES
 const queryBuild = r => q => console.log('executing query', q) || fetch(r, {
   method: 'POST',
   headers: { 'content-type': 'text/plain' },
@@ -999,7 +1180,146 @@ const toValue = v => `"${v}"`
 const toFields = params => `(${Object.keys(params).join(', ')})`
 const toValues = params => `(${Object.values(params).map(toValue).join(', ')})`
 
+const removeItemFromVendorList = (entry, item) => query(`
+  DELETE
+  FROM tbcmangos.npc_vendor_template
+  WHERE entry="${entry}" AND item="${item}"
+`)
+
+const findVendorItemList = VendorTemplateId => query(`
+  SELECT
+    a.entry as entry,
+    item,
+    a.maxcount as maxcount,
+    b.SellPrice as cost,
+    name,
+    icon,
+    ExtendedCost,
+    condition_id,
+    incrtime,
+    Quality
+  FROM tbcmangos.npc_vendor_template as a
+  LEFT JOIN tbcmangos.item_template as b
+    ON a.item = b.entry
+  WHERE a.entry="${VendorTemplateId}"
+`)
+
+const addItemToVendorList = params => queryLog(`
+  INSERT INTO tbcmangos.npc_vendor_template ${toFields(params)}
+  VALUES ${toValues(params)}
+`)
+
+const inSTG = `map = 0
+  AND position_x < -11215
+  AND position_x > -15057
+  AND position_y < 1091
+  AND position_y > -1229`
+
+const getLinkedQuest = npcEntry => query(`
+  SELECT
+    quest as Entry,
+    QuestLevel,
+    Title
+  FROM tbcmangos.creature_questrelation as a
+  LEFT JOIN tbcmangos.quest_template as b
+    ON a.quest = b.entry
+  WHERE a.id="${npcEntry}"
+`)
+
+const getItem = entry => {
+  const whereClause = /[0-9]+/.test(entry)
+    ? `entry="${entry}"`
+    : `name LIKE "%${entry}%"`
+
+  query(`SELECT entry FROM tbcmangos.item_template WHERE ${whereClause} LIMIT 1`)
+}
+
+const findLinkedQuests = entry => query(`
+  SELECT Entry, QuestLevel, Title
+  FROM tbcmangos.quest_template
+  WHERE SrcItemId="${entry}"
+    OR ReqItemId1="${entry}"
+    OR ReqItemId2="${entry}"
+    OR ReqItemId3="${entry}"
+    OR ReqItemId4="${entry}"
+    OR ReqSourceId1="${entry}"
+    OR ReqSourceId2="${entry}"
+    OR ReqSourceId3="${entry}"
+    OR RewItemId1="${entry}"
+    OR RewItemId2="${entry}"
+    OR RewItemId3="${entry}"
+    OR RewChoiceItemId1="${entry}"
+    OR RewChoiceItemId2="${entry}"
+    OR RewChoiceItemId3="${entry}"
+    OR RewChoiceItemId4="${entry}"
+    OR RewChoiceItemId5="${entry}"
+    OR RewChoiceItemId6="${entry}"
+`)
+
+const getQuestGiverItem = quest => query(`
+  SELECT entry, name, Quality, icon
+  FROM tbcmangos.item_template
+  WHERE startquest="${quest}"
+`)
+
+const getQuestGiverNpc = quest => query(`
+  SELECT
+    Entry as entry,
+    MaxLevel as lvl,
+    Name as name
+  FROM tbcmangos.creature_questrelation as a
+  LEFT JOIN tbcmangos.creature_template as b
+    ON a.id = b.Entry
+  WHERE a.quest="${quest}"
+`)
+
+const getQuestTakerNpc = quest => query(`
+  SELECT
+    Entry as entry,
+    MaxLevel as lvl,
+    Name as name
+  FROM tbcmangos.creature_involvedrelation as a
+  LEFT JOIN tbcmangos.creature_template as b
+    ON a.id = b.Entry
+  WHERE a.quest="${quest}"
+`)
+
+const getQuestGiverGob = quest => query(`
+  SELECT entry, name
+  FROM tbcmangos.gameobject_questrelation as a
+  LEFT JOIN tbcmangos.gameobject_template as b
+    ON a.id = b.entry
+  WHERE a.quest="${quest}"
+`)
+
+const getQuestTakerGob = quest => query(`
+  SELECT entry, name
+  FROM tbcmangos.gameobject_involvedrelation as a
+  LEFT JOIN tbcmangos.gameobject_template as b
+    ON a.id = b.entry
+  WHERE a.quest="${quest}"
+`)
+
+const selectQuery = (db, table, fields, params) => query(`
+  SELECT ${fields.join(', ')}
+  FROM ${db}.${table}
+  WHERE ${isStr(params) ? params : querify(params)}
+`)
+
+
 // ELEMENTS
+const itemThumbnail = item => imgEl({
+  src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
+  style: {
+    width: '18px',
+    height: '18px',
+    margin: '4px 7px 4px 4px',
+    boxShadow: '0 0 0 4px black',
+    outline: `${color.blizz.quality[item.Quality]} solid 1px`,
+    outlineOffset: '2px',
+  },
+})
+
 const comment = h.style('span', { color: color.comment })
 const dbLink = h.style('a', {
   color: color.comment,
@@ -1050,7 +1370,6 @@ const content = h.div.style({
 })
 
 const labelEl = h.style('label', { display: 'flex', alignItems: 'baseline' })
-
 const imgEl = h.style('img', {
   verticalAlign: 'middle',
 })
@@ -1098,24 +1417,6 @@ const dbEl = h.span()
 const tableEl = h.span()
 const primaryEl = h.span.style({ color: pink })
 
-const removeItemFromVendorList = (entry, item) => query(`
-  DELETE
-  FROM tbcmangos.npc_vendor_template
-  WHERE entry="${entry}" AND item="${item}"
-`)
-
-const itemThumbnail = item => imgEl({
-  src: `//wowimg.zamimg.com/images/wow/icons/small/${item.icon}.jpg`,
-  style: {
-    width: '18px',
-    height: '18px',
-    margin: '4px 7px 4px 4px',
-    boxShadow: '0 0 0 4px black',
-    outline: `${color.blizz.quality[item.Quality]} solid 1px`,
-    outlineOffset: '2px',
-  },
-})
-
 const npcLink = npc => a({ href: `#/tbcmangos/creature_template/update/${npc.entry}` }, [
   h.span.style({ color: getLevelColor(npc.lvl) }, npc.lvl),
   ` ${npc.name} `,
@@ -1145,32 +1446,9 @@ const questLink = quest => a({
   ` ${quest.Title}`,
 ])
 
-const findVendorItemList = VendorTemplateId => query(`
-  SELECT
-    a.entry as entry,
-    item,
-    a.maxcount as maxcount,
-    b.SellPrice as cost,
-    name,
-    icon,
-    ExtendedCost,
-    condition_id,
-    incrtime,
-    Quality
-  FROM tbcmangos.npc_vendor_template as a
-  LEFT JOIN tbcmangos.item_template as b
-    ON a.item = b.entry
-  WHERE a.entry="${VendorTemplateId}"
-`)
-
-const addItemToVendorList = params => queryLog(`
-  INSERT INTO tbcmangos.npc_vendor_template ${toFields(params)}
-  VALUES ${toValues(params)}
-`)
-
 // SPECIAL_CASE
 const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
-  .then(r => replaceContent(vendorList, r.map(item => flex.style({
+  .then(({rows}) => replaceContent(vendorList, rows.map(item => flex.style({
     alignItems: 'center',
     marginBottom: '0.25em',
     height: '2em',
@@ -1210,17 +1488,6 @@ const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
     }, 'X')
   ]))))
 
-const getLinkedQuest = npcEntry => query(`
-  SELECT
-    quest as Entry,
-    QuestLevel,
-    Title
-  FROM tbcmangos.creature_questrelation as a
-  LEFT JOIN tbcmangos.quest_template as b
-    ON a.quest = b.entry
-  WHERE a.id="${npcEntry}"
-`)
-
 const sideHeader = h.style({
   display: 'flex',
   flexGrow: 1,
@@ -1228,6 +1495,7 @@ const sideHeader = h.style({
   alignItems: 'center',
   justifyContent: 'center',
 })
+
 
 const sortQuest = (a, b) => (b.QuestLevel - a.QuestLevel) || a.Title.localeCompare(b.Title)
 const creatureContent = npc => {
@@ -1246,27 +1514,19 @@ const creatureContent = npc => {
     .then(r => appendChild(leftHeader, r.rows.sort(sortQuest).map(questLink)))
 
   if (npc.VendorTemplateId != 0) {
-    const onclick = () => {
-      const entry = _getVal(itemInput).trim()
-      const whereClause = /[0-9]+/.test(entry)
-        ? `entry="${entry}"`
-        : `name LIKE "%${entry}%"`
+    const onclick = async () => {
+      const { rows: [ item ] } = await getItem(_getVal(itemInput).trim())
+      if (!item) {
+        itemInput.style.color = red
+        return itemInput.focus()
+      }
 
-      query(`SELECT entry FROM tbcmangos.item_template WHERE ${whereClause} LIMIT 1`)
-        .then(({ rows: [ item ] }) => {
-          if (!item) {
-            itemInput.style.color = red
-            return itemInput.focus()
-          }
-          addItemToVendorList({ entry: npc.VendorTemplateId, item: item.entry })
-            .then(({ info }) => {
-              if (info.affectedRows == 1) {
-                fetchItemList(npc.VendorTemplateId, vendorList)
-              }
-              _setVal(itemInput, '')
-              itemInput.focus()
-            })
-        })
+      const { affectedRows } = await addItemToVendorList({ entry: npc.VendorTemplateId, item: item.entry })
+        if (affectedRows == 1) {
+          fetchItemList(npc.VendorTemplateId, vendorList)
+        }
+        _setVal(itemInput, '')
+        itemInput.focus()
     }
     const vendorList = flex.style({ flexFlow: 'row', flexWrap: 'wrap' })
     const onkeydown = keyHandler({ enter: onclick })
@@ -1339,28 +1599,6 @@ const creatureContent = npc => {
 }
 
 ///// ITEM_TEMPLATE
-const findLinkedQuests = entry => query(`
-  SELECT Entry, QuestLevel, Title
-  FROM tbcmangos.quest_template
-  WHERE SrcItemId="${entry}"
-    OR ReqItemId1="${entry}"
-    OR ReqItemId2="${entry}"
-    OR ReqItemId3="${entry}"
-    OR ReqItemId4="${entry}"
-    OR ReqSourceId1="${entry}"
-    OR ReqSourceId2="${entry}"
-    OR ReqSourceId3="${entry}"
-    OR RewItemId1="${entry}"
-    OR RewItemId2="${entry}"
-    OR RewItemId3="${entry}"
-    OR RewChoiceItemId1="${entry}"
-    OR RewChoiceItemId2="${entry}"
-    OR RewChoiceItemId3="${entry}"
-    OR RewChoiceItemId4="${entry}"
-    OR RewChoiceItemId5="${entry}"
-    OR RewChoiceItemId6="${entry}"
-`)
-
 const itemContent = item => {
   console.log(item)
 
@@ -1413,50 +1651,6 @@ const itemContent = item => {
 }
 
 ///// QUEST_TEMPLATE
-const getQuestGiverItem = quest => query(`
-  SELECT entry, name, Quality, icon
-  FROM tbcmangos.item_template
-  WHERE startquest="${quest}"
-`)
-
-const getQuestGiverNpc = quest => query(`
-  SELECT
-    Entry as entry,
-    MaxLevel as lvl,
-    Name as name
-  FROM tbcmangos.creature_questrelation as a
-  LEFT JOIN tbcmangos.creature_template as b
-    ON a.id = b.Entry
-  WHERE a.quest="${quest}"
-`)
-
-const getQuestTakerNpc = quest => query(`
-  SELECT
-    Entry as entry,
-    MaxLevel as lvl,
-    Name as name
-  FROM tbcmangos.creature_involvedrelation as a
-  LEFT JOIN tbcmangos.creature_template as b
-    ON a.id = b.Entry
-  WHERE a.quest="${quest}"
-`)
-
-const getQuestGiverGob = quest => query(`
-  SELECT entry, name
-  FROM tbcmangos.gameobject_questrelation as a
-  LEFT JOIN tbcmangos.gameobject_template as b
-    ON a.id = b.entry
-  WHERE a.quest="${quest}"
-`)
-
-const getQuestTakerGob = quest => query(`
-  SELECT entry, name
-  FROM tbcmangos.gameobject_involvedrelation as a
-  LEFT JOIN tbcmangos.gameobject_template as b
-    ON a.id = b.entry
-  WHERE a.quest="${quest}"
-`)
-
 const npcAndRelationLinks = (npc, quest, type) => h.div([
   npcLink(npc),
   a({
@@ -1536,6 +1730,7 @@ const specialCases = {
       links: { quest: 'quest_template', id: 'gameobject_template' },
     },
     creature_template: {
+      enums: creature_template,
       links: {
         //ModelId: 'Creature_Model_Info',
         LootId: 'creature_loot_template',
@@ -1549,7 +1744,22 @@ const specialCases = {
         EquipmentTemplateId: 'creature_equip_template',
         GossipMenuId: 'gossip_menu_id',
       },
+      fields: {
+        Family: creature => creature.CreatureType === 1,
+      },
       blacklist: new Set([
+        'Armor', // unused
+        'ExperienceMultiplier', // unused
+        'MinLevelHealth', // unused
+        'MaxLevelHealth', // unused
+        'MinLevelMana', // unused
+        'MaxLevelMana', // unused
+        'MinMeleeDmg', // unused
+        'MaxMeleeDmg', // unused
+        'MinRangedDmg', // unused
+        'MaxRangedDmg', // unused
+        'MeleeAttackPower', // unused
+        'RangedAttackPower', // unused
         'RacialLeader',
         'InhabitType',
         'IconName',
@@ -1584,6 +1794,7 @@ const specialCases = {
       blacklist: new Set([
         'displayid',
         'icon',
+        'requiredhonorrank',
         'class',
         'subclass',
         'sheat',
@@ -1741,12 +1952,6 @@ const displayFields = (fields, headerContent) => display(wrappedFlex([
   wrappedFlex(fields.sort(byFieldPos).map(c => c.el)),
 ]))
 
-const selectQuery = (db, table, fields, params) => query(`
-  SELECT ${fields.join(', ')}
-  FROM ${db}.${table}
-  WHERE ${isStr(params) ? params : querify(params)}
-`)
-
 const displaySearchResults = (db, table, params, fields) => {
   selectQuery(db, table, fields, params)
     .then(({ rows, fields }) => {
@@ -1826,15 +2031,17 @@ const displayUpdateField = ({ db, tableName, table, params, primaryFields }) => 
         ])))
 
       const specialCase = g(g(specialCases, db), tableName)
+      const fields = g(specialCase, 'fields')
       const links = g(specialCase, 'links')
       const enums = g(specialCase, 'enums')
+
       specialCase.blacklist || (specialCase.blacklist = new Set())
 
       const rawFieldList = Object.entries(table).map(([name, field]) => {
         let value = first[name]
         if (/^unk([0-9]+)?$/.test(name)) return
         if (field.name.toLowerCase() === 'entry') return
-
+        if (fields[name] && !fields[name](field)) return
         const enumList = enums[name] || []
         const isText = field.type === 'text'
         const original = originalValues === vide ? vide : originalValues[name]
@@ -1941,7 +2148,7 @@ const displayUpdateField = ({ db, tableName, table, params, primaryFields }) => 
           background: color.background,
           margin: '2px 0.25em',
           borderRadius: '0.25em',
-          width: enumElements.length ? '100%' : 'calc(50% - 0.5em)',
+          width: 'calc(50% - 0.5em)',
         }
 
         const elLabel = labelEl({
@@ -1951,7 +2158,7 @@ const displayUpdateField = ({ db, tableName, table, params, primaryFields }) => 
 
         return {
           field,
-          el: enumElements.length ? h.div.style(labelStyle, [ elLabel, enumElements ]) : elLabel
+          el: enumElements.length ? h.div({ style: labelStyle, className: 'enum' }, [ elLabel, enumElements ]) : elLabel
         }
       })
 
@@ -2071,6 +2278,11 @@ button {
 }
 button[disabled] {
   background: transparent;
+}
+button.active { color: var(--pink) }
+.enum:not(:focus-within) {
+  height: 1.9em;
+  overflow: hidden;
 }
 `
 
