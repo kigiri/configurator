@@ -1,0 +1,128 @@
+<html>
+<head>
+  <title>SQL</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAx42QAFP/FABXQkMAQC0uAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAQBEREREREREAFEREREREQQAURERERERBABREREREREEAFEREREREQQAURERERERBABQERAAEREEAFCBEIiREQQAUQgRERERBABRAJEREREEAFAJEREREQQAUJERERERBABRERERERDEAEREREREREQQAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
+<style>
+:root {
+  --background: #282a36;
+  --selection: #44475a;
+  --foreground: #f8f8f2;
+  --comment: #6272a4;
+  --cyan: #8be9fd;
+  --green: #50fa7b;
+  --orange: #ffb86c;
+  --pink: #ff79c6;
+  --purple: #bd93f9;
+  --red: #ff5555;
+  --yellow: #f1fa8c;
+}
+* { margin: 0; padding: 0; font-family: monospace }
+*, *:before, *:after { box-sizing: inherit }
+html {
+  box-sizing: border-box;
+  background: var(--background);
+  color: var(--comment);
+}
+html, body { height: 100% }
+body {
+  padding: 24px 64px;
+  max-width: 1200px;
+  margin: 24px auto;
+}
+h1,h2,h3 { font-weight: normal }
+h1 { color: var(--pink) }
+h2 { color: var(--cyan) }
+a {
+  color: var(--orange);
+  text-decoration: none;
+}
+a:visited { color: var(--purple) }
+a:active { color: var(--#d4b5ff) }
+html,body {
+  max-width: 100%;
+  background: var(--selection)
+}
+h1, h2 { text-align: center }
+h2 { margin-bottom: 1em }
+#output, #query {
+  width: 100%;
+  border-radius: 0.25em;
+  padding: 0.25em;
+  color: var(--foreground);
+  background: var(--background);
+}
+#output { min-height: 10vh }
+#query {
+  height: calc(50vh - 10em);
+  border: none;
+}
+form { text-align: center }
+#skip { var(--yellow) }
+#submit:after { content: "execute" }
+.highlight #submit:after {
+  color: var(--cyan);
+  content: "drop files";
+}
+.highlight #query { background: var(--cyan) }
+button {
+  margin: 1em;
+  background: var(--background);
+  color: var(--green);
+  padding: 0.5em 0.75em;
+  border: none;
+  border-radius: 0.2em;
+  cursor: pointer;
+}
+button[disabled] {
+  color: var(--comment);
+}
+#save:not(:target) { display: none }
+#execute:not(:target) { display: none }
+#history:not(:target) { display: none }
+a .time {
+  color: var(--comment);
+  font-style: italic;
+}
+#history button:hover, #save button:hover {
+  color: var(--red);
+  background: var(--background);
+}
+#history button.warning, #save button.warning {
+  background: var(--red);
+  color: var(--background);
+}
+#history button, #save button {
+  padding: 0.1em 0.25em;
+  color: var(--comment);
+  margin: 0;
+  background: transparent;
+}
+
+#history, #save {
+  padding: 0.25em;
+  background: var(--background);
+  border-radius: 0.25em;
+}
+h2 a.current { color: var(--yellow) }
+</style>
+<script>location.pathname.endsWith('/') || (location.pathname = `${location.pathname}/`)</script>
+</head>
+<body>
+  <h1>SQL</h1>
+  <h2><a href="#execute">execute</a> - <a href="#save">save</a> - <a href="#history">history</a></h2>
+  <div id="execute">
+    <form id="form" method="POST">
+      <textarea id="query" onfocus="e => e.target.select()"></textarea>
+      <button id="submit"></button>
+      <button id="skip" type="button" disabled>skip</button>
+    </form>
+    <pre id="info"></pre>
+    <table id="output"></table>
+  </div>
+  <div id="history">history loading...</div>
+  <div id="save">saves loading...</div>
+  <script type="module" src="../sql.js"></script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<html>
+<head>
+  <title>Config</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAx42QAFP/FABXQkMAQC0uAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAQBEREREREREAFEREREREQQAURERERERBABREREREREEAFEREREREQQAURERERERBABQERAAEREEAFCBEIiREQQAUQgRERERBABRAJEREREEAFAJEREREQQAUJERERERBABRERERERDEAEREREREREQQAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
+<style>
+:root {
+  --background: #282a36;
+  --selection: #44475a;
+  --foreground: #f8f8f2;
+  --comment: #6272a4;
+  --cyan: #8be9fd;
+  --green: #50fa7b;
+  --orange: #ffb86c;
+  --pink: #ff79c6;
+  --purple: #bd93f9;
+  --red: #ff5555;
+  --yellow: #f1fa8c;
+}
+* { margin: 0; padding: 0; font-family: monospace }
+*, *:before, *:after { box-sizing: inherit }
+html {
+  box-sizing: border-box;
+  background: var(--background);
+  color: var(--comment);
+}
+html, body { height: 100% }
+body {
+  padding: 24px 64px;
+  max-width: 1200px;
+  margin: 24px auto;
+}
+h1,h2,h3 { font-weight: normal }
+h1 { color: var(--pink) }
+h2 { color: var(--cyan) }
+a {
+  color: var(--orange);
+  text-decoration: none;
+}
+a:visited { color: var(--purple) }
+a:active { color: var(--#d4b5ff) }
+h1,h2,h3 { padding-right: 0.25em }
+h2 {
+  margin: 64px 0 12px;
+  text-align: center;
+}
+h3 {
+  display: table-cell;
+  padding: 0.25em 0.375em;
+  width:1px;
+}
+input {
+  display: table-cell;
+  background: transparent;
+  border: 0;
+  color: var(--green);
+  width: 100%;
+  padding: 0 0.375em;
+  outline: 0;
+  border-radius: 0.125em;
+  height: 2em;
+}
+input[disabled] { color: transparent }
+input:focus {
+  color: var(--yellow);
+  background: #0003;
+}
+input[type="submit"] {
+  width: fit-content;
+  text-transform: uppercase;
+}
+label {
+  display: table;
+  width: 100%;
+}
+form > div {
+  display: flex;
+  border-radius: 0.25em;
+  background: var(--selection);
+  color: var(--foreground);
+  margin-top: 2px;
+}
+pre {
+  white-space: pre-wrap;
+  margin-bottom: 2em;
+  padding: 1em 2em;
+}
+.changed h3 {
+  color: var(--orange)
+}
+</style>
+<script>location.pathname.endsWith('/') || (location.pathname = `${location.pathname}/`)</script>
+</head>
+<body>
+  <div id="config">
+    config loading...
+  </div>
+<script type="module" >
+const configElement = document.getElementById('config')
+const quot = s => `"${String(s).replace(/"/g, '&quot;')}"`
+const slugify = s => s
+  .normalize('NFKD')
+  .replace(/[^\w\s.-_\/]/g, '')
+  .toLowerCase()
+  .replace(/([^a-zA-Z]+)/g, '-')
+
+fetch(`all/`).then(async res => {
+  const configs = await res.json()
+  configElement.innerHTML = configs
+    .sort((a,b) => a.title.localeCompare(b.title))
+    .map(({ title, version, categories }, i) => `
+      <div style="text-align: center; margin-bottom: 24px">
+        <h1 id="${slugify(title)}-${i}">${title}</h1>
+        ${version.key} ${version.value}
+      </div>
+      ${categories.map(([category, content]) => `
+      <div>
+        <h2 id="${slugify(category)}-${i}">${category}</h2>
+        <div>
+          ${content.map(({ key, value, source, description }) => `
+          <form
+            data-i="${i}"
+            data-key=${quot(key)}
+            data-value=${quot(value)}
+            data-source=${quot(source)}
+          >
+            <div>
+              <label>
+                <h3 id="${slugify(key)}-${i}">${key}</h3>
+                <input value=${quot(value)}/>
+              </label>
+              <input type="submit" value="save" disabled/>
+            </div>
+            ${description ? `<pre>${description}</pre>` : ''}
+          </form>`).join('\n')}
+        </div>
+      </div>`).join('\n')}`)
+    .join('\n')
+
+  const { pathname } = location
+  const path = pathname.endsWith('/') ? pathname : `${pathname}/`
+  const save = async form => {
+    try {
+      const { value } = form[0]
+      const { i, key, source } = form.dataset
+      form.className = 'changing'
+      const rest = await fetch([
+        `${path}set?i=${i}`,
+        `key=${encodeURIComponent(key)}`,
+        `value=${encodeURIComponent(value)}`,
+      ].join('&'))
+      form.className = value === source ? 'default' : 'changed'
+      form.dataset.value = value
+    } catch (err) {
+      form.className = 'failed'
+    }
+  }
+
+  for (const form of document.getElementsByTagName('form')) {
+    const { source } = form.dataset
+    const [input, submit] = form
+
+    form.className = input.value === source ? 'default' : 'changed'
+    const handleChange = () => submit.disabled = input.value === form.dataset.value
+    const handleSubmit = event => {
+      event.preventDefault()
+      if (form.className === 'saving') return
+      form.className = 'saving'
+      save(form).then(handleChange)
+    }
+
+    const handleKeyboard = event => {
+      if (event.key === 'Escape') {
+        input.value = form.dataset.value
+        submit.disabled = true
+        input.blur()
+      } else if (event.ctrlKey && event.key === 's') {
+        handleSubmit(event)
+      }
+    }
+
+    input.addEventListener('keydown', handleKeyboard)
+    input.addEventListener('change', handleChange, false)
+    input.addEventListener('keyup', handleChange, false)
+    input.addEventListener('blur', handleChange, false)
+    input.addEventListener('focus', () => input.select())
+    form.addEventListener('submit', handleSubmit)
+  }
+})
+</script>
+</body>
+</html>
