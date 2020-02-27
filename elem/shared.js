@@ -1,6 +1,6 @@
-import { h } from '../lib/h.js'
+import { h, isStr } from '../lib/h.js'
 import * as images from '../lib/image.js'
-import { color } from '../lib/colors.js'
+import { color, getLevelColor } from '../lib/colors.js'
 const { pink } = color
 
 export const itemThumbnail = item => imgEl({
@@ -40,47 +40,6 @@ export const questLink = quest => a({
 ])
 
 // SPECIAL_CASE
-export const fetchItemList = (vendor, vendorList) => findVendorItemList(vendor)
-  .then(({rows}) => replaceContent(vendorList, rows.map(item => flex.style({
-    alignItems: 'center',
-    marginBottom: '0.25em',
-    height: '2em',
-    width: '33%',
-    flexGrow: 1,
-    paddingLeft: '0.25em',
-  },[
-    itemLink(item, `#/tbcmangos/npc_vendor_template/${vendor}/update/${item.item}`),
-    a({
-      style: {
-        padding: '0.75em',
-        color: red,
-      },
-      href: location.hash,
-      onclick: function handleDelete({ target: el }) {
-        el.onclick = undefined
-        el.style.color = green
-        replaceContent(el, '↺')
-        el.parentElement.style.opacity = 0.3
-        removeItemFromVendorList(item.entry, item.item)
-          .then(() => el.onclick = () => {
-            el.onclick = undefined
-            el.style.color = color.comment
-            replaceContent(el, '.')
-            addItemToVendorList(
-              Object.fromEntries(Object.entries(item)
-                .filter(([,name]) => dbInfo.tbcmangos.npc_vendor_template[name])))
-              .then(r => {
-                console.log(r)
-                el.onclick = handleDelete
-                el.style.color = red
-                replaceContent(el, 'X')
-                el.parentElement.style.opacity = 1
-              })
-          })
-      },
-    }, 'X')
-  ]))))
-
 export const sideHeader = h.style({
   display: 'flex',
   flexGrow: 1,
@@ -104,3 +63,27 @@ export const inputHeader = h.style({
 
 export const comment = h.style('span', { color: color.comment })
 export const a = h.style('a', { textDecoration: 'none', color: 'inherit' })
+export const imgEl = h.style('img', {
+  verticalAlign: 'middle',
+})
+
+export const inputBaseEl = h.style('input', {
+  background: color.background,
+  color: color.yellow,
+  borderRadius: '0.25em',
+  border: 0,
+  padding: '0 0.5em',
+  height: '1.75em',
+})
+
+export const itemLink = (item, href) => [
+  itemThumbnail(item),
+  h.a({
+    href: isStr(href) ? href : `#/tbcmangos/item_template/update/${item.entry}`,
+    style: {
+      flexGrow: 1,
+      color: color.blizz.quality[item.Quality],
+      textDecoration: 'none',
+    },
+  }, item.name),
+]

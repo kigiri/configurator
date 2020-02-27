@@ -2,7 +2,7 @@ import { h } from '../lib/h.js'
 import { cdn } from '../lib/image.js'
 import { color, getLevelColor } from '../lib/colors.js'
 import { faction, skill, race, classes, dmgTypes, bitFlags, getCost, sortQuest } from '../lib/wow.js'
-import { sideHeader, inputHeader, questLink, comment } from '../elem/shared.js'
+import { sideHeader, inputHeader, questLink, comment, imgEl } from '../elem/shared.js'
 
 export const enums = {
   RequiredReputationFaction: faction,
@@ -407,10 +407,6 @@ const findLinkedQuests = entry => query(`
     OR RewChoiceItemId5="${entry}"
     OR RewChoiceItemId6="${entry}"
 `)
-
-const imgEl = h.style('img', {
-  verticalAlign: 'middle',
-})
 
 export const content = item => {
   console.log(item)

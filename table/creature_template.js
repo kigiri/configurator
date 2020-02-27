@@ -1,8 +1,8 @@
 import { faction, dmgTypes, bitFlags, getCost, sortQuest } from '../lib/wow.js'
-import { color, getLevelColor } from '../lib/colors.js'
+import { color, red, cyan, green, getLevelColor } from '../lib/colors.js'
 import { cdn } from '../lib/image.js'
-import { h, appendChild } from '../lib/h.js'
-import { sideHeader, inputHeader, questLink, flex } from '../elem/shared.js'
+import { h, appendChild, keyHandler, replaceContent } from '../lib/h.js'
+import { a, sideHeader, inputHeader, questLink, flex, imgEl, inputBaseEl, itemLink } from '../elem/shared.js'
 
 export const enums = {
   Rank: [
@@ -292,6 +292,55 @@ export const blacklist = new Set([
   'HeroicEntry',
 ])
 
+
+const removeItemFromVendorList = (entry, item) => query(`
+  DELETE
+  FROM tbcmangos.npc_vendor_template
+  WHERE entry="${entry}" AND item="${item}"
+`)
+
+const findVendorItemList = VendorTemplateId => query(`
+  SELECT
+    a.entry as entry,
+    item,
+    a.maxcount as maxcount,
+    b.SellPrice as cost,
+    name,
+    icon,
+    ExtendedCost,
+    condition_id,
+    incrtime,
+    Quality
+  FROM tbcmangos.npc_vendor_template as a
+  LEFT JOIN tbcmangos.item_template as b
+    ON a.item = b.entry
+  WHERE a.entry="${VendorTemplateId}"
+`)
+
+const findNpcItemList = npcEntry => query(`
+  SELECT
+    a.entry as entry,
+    item,
+    a.maxcount as maxcount,
+    b.SellPrice as cost,
+    name,
+    icon,
+    ExtendedCost,
+    condition_id,
+    incrtime,
+    Quality
+  FROM tbcmangos.npc_vendor as a
+  LEFT JOIN tbcmangos.item_template as b
+    ON a.item = b.entry
+  WHERE a.entry="${npcEntry}"
+`)
+
+
+const addItemToVendorList = params => queryLog(`
+  INSERT INTO tbcmangos.npc_vendor_template ${toFields(params)}
+  VALUES ${toValues(params)}
+`)
+
 const getLinkedQuest = npcEntry => query(`
   SELECT
     quest as Entry,
@@ -302,6 +351,54 @@ const getLinkedQuest = npcEntry => query(`
     ON a.quest = b.entry
   WHERE a.id="${npcEntry}"
 `)
+
+
+const mergeResults = queries => Promise.all(queries)
+  .then(results => results.flatMap(r => r.rows))
+
+export const fetchItemList = (entry, vendor, vendorList) => mergeResults([
+  findNpcItemList(entry),
+  findVendorItemList(vendor),
+]).then(rows => replaceContent(vendorList, rows.map(item => flex.style({
+    alignItems: 'center',
+    marginBottom: '0.25em',
+    height: '2em',
+    width: '33%',
+    flexGrow: 1,
+    paddingLeft: '0.25em',
+  },[
+    itemLink(item, `#/tbcmangos/npc_vendor_template/${vendor}/update/${item.item}`),
+    a({
+      style: {
+        padding: '0.75em',
+        color: red,
+      },
+      href: location.hash,
+      onclick: function handleDelete({ target: el }) {
+        el.onclick = undefined
+        el.style.color = green
+        replaceContent(el, '↺')
+        el.parentElement.style.opacity = 0.3
+        removeItemFromVendorList(item.entry, item.item)
+          .then(() => el.onclick = () => {
+            el.onclick = undefined
+            el.style.color = color.comment
+            replaceContent(el, '.')
+            addItemToVendorList(
+              Object.fromEntries(Object.entries(item)
+                .filter(([,name]) => dbInfo.tbcmangos.npc_vendor_template[name])))
+              .then(r => {
+                console.log(r)
+                el.onclick = handleDelete
+                el.style.color = red
+                replaceContent(el, 'X')
+                el.parentElement.style.opacity = 1
+              })
+          })
+      },
+    }, 'X')
+  ]))))
+
 
 const buildCost = ([type, amount]) => h.span.style(
   { color: color.blizz[type] },
@@ -337,7 +434,7 @@ export const content = npc => {
 
       const { affectedRows } = await addItemToVendorList({ entry: npc.VendorTemplateId, item: item.entry })
         if (affectedRows == 1) {
-          fetchItemList(npc.VendorTemplateId, vendorList)
+          fetchItemList(npc.Entry, npc.VendorTemplateId, vendorList)
         }
         _setVal(itemInput, '')
         itemInput.focus()
@@ -373,7 +470,7 @@ export const content = npc => {
       ])
     ]))
 
-    fetchItemList(npc.VendorTemplateId, vendorList)
+    fetchItemList(npc.Entry, npc.VendorTemplateId, vendorList)
   }
 
   return [
@@ -395,7 +492,7 @@ export const content = npc => {
         h.span([
           npc.Name,
           npc.Rank != 0
-            ? ` (${creature_template.Rank[npc.Rank]})`
+            ? ` (${enums.Rank[npc.Rank]})`
             : undefined,
         ]),
         (npc.SubName && npc.SubName !== 'null')

@@ -5,7 +5,7 @@ import * as creature_template from './table/creature_template.js'
 import * as quest_template from './table/quest_template.js'
 import * as item_template from './table/item_template.js'
 import { colorize, color } from './lib/colors.js'
-import { a, flex, logo, comment } from './elem/shared.js'
+import { a, flex, logo, comment, inputBaseEl } from './elem/shared.js'
 const { cyan, green, orange, pink, red, purple, yellow } = color
 
 const _key = el => el.tagName === 'DIV' ? 'textContent' : 'value'
@@ -76,35 +76,6 @@ const querify = params => Object.entries(params).map(toSQL).join(' AND ')
 const toValue = v => `"${v}"`
 const toFields = params => `(${Object.keys(params).join(', ')})`
 const toValues = params => `(${Object.values(params).map(toValue).join(', ')})`
-
-const removeItemFromVendorList = (entry, item) => query(`
-  DELETE
-  FROM tbcmangos.npc_vendor_template
-  WHERE entry="${entry}" AND item="${item}"
-`)
-
-const findVendorItemList = VendorTemplateId => query(`
-  SELECT
-    a.entry as entry,
-    item,
-    a.maxcount as maxcount,
-    b.SellPrice as cost,
-    name,
-    icon,
-    ExtendedCost,
-    condition_id,
-    incrtime,
-    Quality
-  FROM tbcmangos.npc_vendor_template as a
-  LEFT JOIN tbcmangos.item_template as b
-    ON a.item = b.entry
-  WHERE a.entry="${VendorTemplateId}"
-`)
-
-const addItemToVendorList = params => queryLog(`
-  INSERT INTO tbcmangos.npc_vendor_template ${toFields(params)}
-  VALUES ${toValues(params)}
-`)
 
 const inSTG = `map = 0
   AND position_x < -11215
@@ -199,15 +170,6 @@ export const inputEl = h.style('input', {
   borderRadius: '0.25em',
   border: 'none',
   width: '100%',
-})
-
-export const inputBaseEl = h.style('input', {
-  background: color.background,
-  color: color.yellow,
-  borderRadius: '0.25em',
-  border: 0,
-  padding: '0 0.5em',
-  height: '1.75em',
 })
 
 //export const textAreaEl = h.style('textarea', { resize: 'vertical', border: 'none' })
@@ -361,8 +323,8 @@ const displayFields = (fields, headerContent) => display(wrappedFlex([
   wrappedFlex(fields.sort(byFieldPos).map(c => c.el)),
 ]))
 
-const displaySearchResults = (db, table, params, fields) => {
-  selectQuery(db, table, fields, params)
+const displaySearchResults = (db, table, f, params) => {
+  selectQuery(db, table, f, params)
     .then(({ rows, fields }) => {
       console.log('WHERE RESULT', rows, params, fields)
       if (!rows.length) return display('no results')
@@ -380,6 +342,7 @@ const displayWhereSelector = ({ db, tableName, table, params, primaryFields }) =
       return displaySearchResults(db, tableName,
         ...JSON.parse(`[[${b64.decode(hash)}"}]`))
     } catch (err) {
+      console.error(err)
       return router.set(`${db}/${tableName}/where/`)
     }
   }
@@ -606,7 +569,6 @@ const loadRoute = route => {
     style: { color: cyan },
   }, tableName))
 
-  console.log('PRIMARY BUG', { table })
   const primaryFields = Object.values(table)
     .filter(field => field.ref === 'PRIMARY')
 

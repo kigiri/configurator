@@ -1,6 +1,6 @@
 import { h } from '../lib/h.js'
 import { classes, skill, race, faction, bitFlags } from '../lib/wow.js'
-import { a, sideHeader, inputHeader } from '../elem/shared.js'
+import { a, sideHeader, inputHeader, itemLink } from '../elem/shared.js'
 import { purple, cyan, color, getLevelColor } from '../lib/colors.js'
 
 const questSort = {
@@ -166,18 +166,6 @@ const npcLink = npc => a({ href: `#/tbcmangos/creature_template/update/${npc.ent
 
 const gobLink = gob => a({ href: `#/tbcmangos/gameobject_template/update/${gob.entry}` },
   [ `${gob.name} `, comment('(object)') ])
-
-const itemLink = (item, href) => [
-  itemThumbnail(item),
-  h.a({
-    href: isStr(href) ? href : `#/tbcmangos/item_template/update/${item.entry}`,
-    style: {
-      flexGrow: 1,
-      color: color.blizz.quality[item.Quality],
-      textDecoration: 'none',
-    },
-  }, item.name),
-]
 
 export const content = quest => {
   const leftHeader = sideHeader.style({ alignItems: 'flex-start' })
